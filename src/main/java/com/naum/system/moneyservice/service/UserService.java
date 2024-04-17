@@ -3,10 +3,14 @@ package com.naum.system.moneyservice.service;
 import com.naum.system.moneyservice.domain.User;
 import com.naum.system.moneyservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 public class UserService {
@@ -14,10 +18,18 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    public User create(User user) {
-        if (user == null) {
-            throw new IllegalArgumentException("User is null");
+    public User create(String name, String email) {
+        if (email == null) {
+            throw new IllegalArgumentException("User email is null");
         }
+        if (!Pattern.compile("^(.+)@(.+)$")
+                .matcher(email)
+                .matches()) {
+            throw new IllegalArgumentException("User email is not valid");
+        }
+        User user = new User();
+        user.setName(name);
+        user.setEmail(email);
         return userRepository.save(user);
     }
 
@@ -28,13 +40,24 @@ public class UserService {
         return userRepository.findUserById(id);
     }
 
-    public @Nullable User findUserByUserNameAndPassword(String userName, String password) {
-        if (userName == null) {
-            throw new IllegalArgumentException("User name is null");
+    public @Nullable User findUserByEmail(String email) {
+        if (email == null) {
+            throw new IllegalArgumentException("User email is null");
         }
-        if (password == null) {
-            throw new IllegalArgumentException("User password is null");
+        return userRepository.findUserByEmail(email);
+    }
+
+    public @NonNull ArrayList<User> findAllUser() {
+        Iterable<User> all = userRepository.findAll();
+        return StreamSupport.stream(all.spliterator(), false)
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    public @NonNull boolean deleteUserById(Long id) {
+        if (id == null) {
+            return false;
         }
-        return userRepository.findUserByUserNameAndPassword(userName, password);
+        userRepository.deleteById(id);
+        return true;
     }
 }

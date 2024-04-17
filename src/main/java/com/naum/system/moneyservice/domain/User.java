@@ -15,12 +15,12 @@ public class User implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "user_id")
+    @Column(name = "id")
     Long id;
 
-    @Column(name = "user_name", nullable = false)
-    private String userName;
+    @Column(name = "name")
+    private String name;
 
-    @Column(name = "password")
-    private String password;
+    @Column(name = "email", nullable = false)
+    private String email;
 }
