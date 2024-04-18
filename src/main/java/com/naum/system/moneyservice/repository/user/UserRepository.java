@@ -1,6 +1,6 @@
-package com.naum.system.moneyservice.repository;
+package com.naum.system.moneyservice.repository.user;
 
-import com.naum.system.moneyservice.domain.User;
+import com.naum.system.moneyservice.domain.user.User;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

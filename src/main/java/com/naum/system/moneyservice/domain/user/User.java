@@ -1,4 +1,4 @@
-package com.naum.system.moneyservice.domain;
+package com.naum.system.moneyservice.domain.user;
 
 import jakarta.persistence.*;
 import lombok.Getter;

@@ -1,7 +1,7 @@
-package com.naum.system.moneyservice.service;
+package com.naum.system.moneyservice.service.user;
 
-import com.naum.system.moneyservice.domain.User;
-import com.naum.system.moneyservice.repository.UserRepository;
+import com.naum.system.moneyservice.domain.user.User;
+import com.naum.system.moneyservice.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;

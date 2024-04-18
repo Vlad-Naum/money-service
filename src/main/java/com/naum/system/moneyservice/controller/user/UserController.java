@@ -1,8 +1,8 @@
-package com.naum.system.moneyservice.controller;
+package com.naum.system.moneyservice.controller.user;
 
-import com.naum.system.moneyservice.domain.User;
-import com.naum.system.moneyservice.domain.UserCreate;
-import com.naum.system.moneyservice.service.UserService;
+import com.naum.system.moneyservice.domain.user.User;
+import com.naum.system.moneyservice.domain.user.UserCreate;
+import com.naum.system.moneyservice.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
