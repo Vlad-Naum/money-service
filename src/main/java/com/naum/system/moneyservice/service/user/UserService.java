@@ -1,6 +1,7 @@
 package com.naum.system.moneyservice.service.user;
 
 import com.naum.system.moneyservice.domain.user.User;
+import com.naum.system.moneyservice.domain.user.UserCreateDto;
 import com.naum.system.moneyservice.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
@@ -18,18 +19,15 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    public User create(String name, String email) {
-        if (email == null) {
-            throw new IllegalArgumentException("User email is null");
-        }
+    public User create(UserCreateDto userCreateDto) {
         if (!Pattern.compile("^(.+)@(.+)$")
-                .matcher(email)
+                .matcher(userCreateDto.email())
                 .matches()) {
             throw new IllegalArgumentException("User email is not valid");
         }
         User user = new User();
-        user.setName(name);
-        user.setEmail(email);
+        user.setName(userCreateDto.name());
+        user.setEmail(userCreateDto.email());
         return userRepository.save(user);
     }
 
