@@ -27,7 +27,7 @@ public class MoneyCosts {
     private Long expenses;
 
     @Column(name = "date_time")
-    private LocalDateTime localDateTime;
+    private LocalDateTime dateTime;
 
     @ManyToOne(optional = false)
     @JoinColumn(name="user_id", nullable=false, updatable=false)

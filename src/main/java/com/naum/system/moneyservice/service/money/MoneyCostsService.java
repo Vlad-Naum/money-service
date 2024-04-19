@@ -19,7 +19,7 @@ public class MoneyCostsService {
     public MoneyCosts create(User user, LocalDateTime dateTime, Long expenses, MoneyCostsCategory costsCategory) {
         MoneyCosts moneyCosts = new MoneyCosts();
         moneyCosts.setUser(user);
-        moneyCosts.setLocalDateTime(dateTime);
+        moneyCosts.setDateTime(dateTime);
         moneyCosts.setExpenses(expenses);
         moneyCosts.setMoneyCostsCategory(costsCategory);
         return moneyCostsRepository.save(moneyCosts);
@@ -27,5 +27,13 @@ public class MoneyCostsService {
 
     public List<MoneyCosts> findAllByUserId(Long userId) {
         return moneyCostsRepository.findAllByUserId(userId);
+    }
+
+    public List<MoneyCosts> findAllByDateTimeAfter(LocalDateTime dateTime) {
+        return moneyCostsRepository.findByDateTimeAfter(dateTime);
+    }
+
+    public List<MoneyCosts> findAllByDateTimeAfterAndUserId(LocalDateTime dateTime, Long userId) {
+        return moneyCostsRepository.findByDateTimeAfterAndUserId(dateTime, userId);
     }
 }
