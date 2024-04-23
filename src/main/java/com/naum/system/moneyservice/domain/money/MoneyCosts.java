@@ -33,4 +33,15 @@ public class MoneyCosts {
     @JoinColumn(name="user_id", nullable=false, updatable=false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
+
+    @Override
+    public String toString() {
+        return "MoneyCosts{" +
+                "id=" + id +
+                ", moneyCostsCategory=" + moneyCostsCategory +
+                ", expenses=" + expenses +
+                ", dateTime=" + dateTime +
+                ", user=" + user +
+                '}';
+    }
 }
