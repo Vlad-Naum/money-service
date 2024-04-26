@@ -1,6 +1,6 @@
 package com.naum.system.moneyservice.domain.money;
 
-import com.naum.system.moneyservice.domain.user.UserDto;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,7 +16,6 @@ public class MoneyCostsDto {
 
     private Long expenses;
 
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     private LocalDateTime localDateTime;
-
-    private UserDto user;
 }

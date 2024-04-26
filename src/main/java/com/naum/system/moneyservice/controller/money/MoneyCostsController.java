@@ -1,18 +1,20 @@
 package com.naum.system.moneyservice.controller.money;
 
+import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
 import com.naum.system.moneyservice.domain.money.MoneyCostsDto;
 import com.naum.system.moneyservice.service.money.MoneyCostsService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.SortDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.lang.Nullable;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping(path = "/users/{user_id}/money_costs")
@@ -25,13 +27,19 @@ public class MoneyCostsController {
     private ModelMapper modelMapper;
 
     @RequestMapping(path = "/", method = RequestMethod.GET)
-    public ResponseEntity<List<MoneyCostsDto>> getAllByUserId(@PathVariable(name = "user_id") Long userId) {
-        List<MoneyCostsDto> allMoneyCostsDto = moneyCostsService.findAllByUserId(userId)
-                .stream()
-                .map(moneyCosts -> modelMapper.map(moneyCosts, MoneyCostsDto.class))
-                .collect(Collectors.toList());
-        return new ResponseEntity<>(
-                allMoneyCostsDto,
-                HttpStatus.OK);
+    public ResponseEntity<Page<MoneyCostsDto>> getAllByDateAndUserIdWithCategory(
+            @PathVariable(name = "user_id") Long userId,
+            @RequestParam("localDate") LocalDate date,
+            @SortDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable,
+            @RequestParam("moneyCostsCategory") @Nullable MoneyCostsCategory category) {
+        Page<MoneyCostsDto> moneyCostsPage;
+        if (category == null) {
+            moneyCostsPage = moneyCostsService.findAllByDateAndUserId(date, userId, pageable)
+                    .map(moneyCosts -> modelMapper.map(moneyCosts, MoneyCostsDto.class));
+        } else {
+            moneyCostsPage = moneyCostsService.findAllByDateAndUserIdAndCategory(date, userId, pageable, category)
+                    .map(moneyCosts -> modelMapper.map(moneyCosts, MoneyCostsDto.class));
+        }
+        return new ResponseEntity<>(moneyCostsPage, HttpStatus.OK);
     }
 }
