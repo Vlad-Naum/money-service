@@ -1,5 +1,6 @@
 package com.naum.system.producer.service;
 
+import com.naum.system.producer.domain.MoneyCostsKafka;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,15 +20,15 @@ public class KafkaProducerService {
     private String topicName;
 
     @Autowired
-    private KafkaTemplate<String, String> kafkaTemplate;
+    private KafkaTemplate<String, MoneyCostsKafka> moneyCostsKafkaTemplate;
 
-    public void sendMessage(String message) {
-        CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send(topicName, message);
+    public void sendMessage(MoneyCostsKafka moneyCostsKafka) {
+        CompletableFuture<SendResult<String, MoneyCostsKafka>> future = moneyCostsKafkaTemplate.send(topicName, moneyCostsKafka);
         future.whenComplete((result, ex) -> {
             if (ex == null) {
-                log.info("Sent message=[{}] with offset=[{}]", message, result.getRecordMetadata().offset());
+                log.info("Sent success with offset=[{}]", result.getRecordMetadata().offset());
             } else {
-                log.error("Unable to send message=[{}]", message, ex);
+                log.error("Unable to send",  ex);
             }
         });
     }
