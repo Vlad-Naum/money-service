@@ -1,1 +1,3 @@
 rootProject.name = 'money-service'
+include 'money-producer'
+
