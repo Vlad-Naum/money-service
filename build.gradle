@@ -5,10 +5,22 @@ plugins {
 }
 
 group = 'com.naum.system'
-version = '0.0.1-SNAPSHOT'
+version = '1.0.0'
 
 java {
 	sourceCompatibility = '17'
+}
+
+jar {
+	manifest {
+		attributes "Main-Class": "com.naum.system.moneyservice.MoneyServiceApplication"
+	}
+
+	from {
+		configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+	}
+
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 configurations {

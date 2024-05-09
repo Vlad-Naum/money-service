@@ -29,6 +29,7 @@ public class EmailService {
             return List.of(DEFAULT_EMAIL);
         }
         List<String> emails = new ArrayList<>();
+        emails.add(DEFAULT_EMAIL);
         Matcher matcher = PATTERN.matcher(response.getBody());
         while (matcher.find()) {
             String email = matcher.group(1);
