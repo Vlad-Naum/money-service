@@ -1,20 +1,29 @@
-version: '2'
+version: '3'
 services:
   money-service:
     build:
       context: .
-    container_name: money-service
+    container_name: main
+    hostname: main
     ports:
       - "8080:8080"
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8080/users/ || exit 1
+      interval: 10s
+      retries: 60
+      timeout: 10s
     depends_on:
-      - db
-      - kafka
+      db:
+        condition: service_started
+      kafka:
+        condition: service_healthy
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/money_service
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres12345
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=PLAINTEXT://kafka:29092
+
   db:
     image: 'postgres:14'
     container_name: db
@@ -23,6 +32,20 @@ services:
     environment:
         - POSTGRES_USER=postgres
         - POSTGRES_PASSWORD=postgres12345
+
+  money-producer:
+    build:
+      context: ./money-producer
+    container_name: producer
+    depends_on:
+      money-service:
+          condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=PLAINTEXT://kafka:29092
+      - EMAIL_RESOURCE_URL=http://main:8080/users/
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.2.1
     hostname: zookeeper
@@ -38,10 +61,16 @@ services:
     hostname: kafka
     container_name: kafka
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_started
     ports:
       - "9092:9092"
       - "9997:9997"
+    healthcheck:
+      test: kafka-topics --list --bootstrap-server localhost:9092 || exit 1
+      interval: 10s
+      timeout: 60s
+      retries: 60
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'

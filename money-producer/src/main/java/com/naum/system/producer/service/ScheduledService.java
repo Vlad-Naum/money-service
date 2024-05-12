@@ -27,7 +27,7 @@ public class ScheduledService {
         MoneyCostsKafka moneyCostsKafka = new MoneyCostsKafka();
         moneyCostsKafka.setMoneyCostsCategoryId(random.nextInt(0, MoneyCostsCategory.values().length));
         moneyCostsKafka.setExpenses(random.nextLong(100000));
-        moneyCostsKafka.setUserEmail(emails.get(random.nextInt(emails.size())));
+        moneyCostsKafka.setUserEmail(emails.get(random.nextInt(0, emails.size())));
         moneyCostsKafka.setLocalDateTime(LocalDateTime.now());
         producerService.sendMessage(moneyCostsKafka);
     }

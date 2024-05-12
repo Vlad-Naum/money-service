@@ -21,7 +21,6 @@ public class EmailService {
 
     public List<String> getEmails() {
         RestTemplate restTemplate = new RestTemplate();
-        System.out.println(emailResourceUrl);
         ResponseEntity<String> response
                 = restTemplate.getForEntity(emailResourceUrl, String.class);
         String body = response.getBody();
