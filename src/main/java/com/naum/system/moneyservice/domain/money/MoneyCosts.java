@@ -41,7 +41,7 @@ public class MoneyCosts {
                 ", moneyCostsCategory=" + moneyCostsCategory +
                 ", expenses=" + expenses +
                 ", dateTime=" + dateTime +
-                ", user=" + user +
+                ", userId=" + user.getId() +
                 '}';
     }
 }

@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 @Service
 public class EmailService {
 
-    private static final Pattern PATTERN = Pattern.compile("\"email\":\"(.*)\"");
+    private static final Pattern PATTERN = Pattern.compile("\"email\":\"(.*?)\"");
     private static final String DEFAULT_EMAIL = "test@test.com";
 
     @Value(value = "${email.resource.url}")
