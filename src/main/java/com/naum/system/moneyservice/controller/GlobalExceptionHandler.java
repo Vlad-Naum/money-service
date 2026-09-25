@@ -1,5 +1,6 @@
 package com.naum.system.moneyservice.controller;
 
+import com.naum.system.moneyservice.service.exception.InvalidEmailException;
 import com.naum.system.moneyservice.service.exception.UserNotFoundException;
 import org.springframework.http.*;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -37,5 +38,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         problem.setDetail("Request validation failed");
         problem.setProperty("errors", errors);
         return handleExceptionInternal(ex, problem, headers, status, request);
+    }
+
+    @ExceptionHandler(InvalidEmailException.class)
+    public ProblemDetail handleInvalidEmail(InvalidEmailException e) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Request validation failed");
+        problem.setProperty("errors", Map.of("email", List.of(e.getMessage())));
+        return problem;
     }
 }

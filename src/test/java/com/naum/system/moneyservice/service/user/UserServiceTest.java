@@ -1,8 +1,8 @@
 package com.naum.system.moneyservice.service.user;
 
 import com.naum.system.moneyservice.domain.user.User;
-import com.naum.system.moneyservice.controller.user.dto.UserCreateDto;
 import com.naum.system.moneyservice.repository.user.UserRepository;
+import com.naum.system.moneyservice.service.exception.InvalidEmailException;
 import com.naum.system.moneyservice.service.exception.UserNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,8 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -44,9 +43,10 @@ class UserServiceTest {
 
     @Test
     void create_withInvalidEmail_throwsAndDoesNotSave() {
-        assertThatThrownBy(() -> userService.create("Ivan", "not-an-email"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("User email is not valid");
+        String invalidEmail = "not-an-email";
+        assertThatThrownBy(() -> userService.create("Ivan", invalidEmail))
+                .isInstanceOf(InvalidEmailException.class)
+                .hasMessage("Email is invalid");
 
         verify(userRepository, never()).save(any());
     }

@@ -113,7 +113,6 @@ class MoneyCostsControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-    @Disabled("Задача 7: в сущности поле dateTime, в DTO localDateTime — ModelMapper их не сопоставляет, в ответе null")
     @Test
     void response_containsDateTime() throws Exception {
         when(moneyCostsService.findAllByDateAndUserId(eq(DATE), eq(1L), any(Pageable.class)))

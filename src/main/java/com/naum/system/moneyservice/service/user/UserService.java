@@ -2,30 +2,27 @@ package com.naum.system.moneyservice.service.user;
 
 import com.naum.system.moneyservice.domain.user.User;
 import com.naum.system.moneyservice.repository.user.UserRepository;
+import com.naum.system.moneyservice.service.exception.InvalidEmailException;
 import com.naum.system.moneyservice.service.exception.UserNotFoundException;
+import com.naum.system.moneyservice.utils.EmailRules;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor
-@Validated
 public class UserService {
 
     private final UserRepository userRepository;
 
     public User create(String name, String email) {
-        if (!Pattern.compile("^(.+)@(.+)$")
-                .matcher(email)
-                .matches()) {
-            throw new IllegalArgumentException("User email is not valid");
+        if (!EmailRules.isValid(email)) {
+            throw new InvalidEmailException();
         }
         User user = new User();
         user.setName(name);

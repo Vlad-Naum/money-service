@@ -24,31 +24,22 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<List<UserDto>> getAll() {
-        return new ResponseEntity<>(
-                userMapper.toDto(userService.findAllUser()),
-                HttpStatus.OK);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(userMapper.toDto(userService.findAllUser()));
     }
 
     @PostMapping
-    public ResponseEntity<?> createNewUser(@Valid @RequestBody UserCreateDto userCreateDto) {
-        try {
-            User userSave = userService.create(userCreateDto.name(), userCreateDto.email());
-            return new ResponseEntity<>(
-                    userSave.getId(),
-                    HttpStatus.CREATED);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(e.getMessage());
-        }
+    public ResponseEntity<Long> createNewUser(@Valid @RequestBody UserCreateDto userCreateDto) {
+        User userSave = userService.create(userCreateDto.name(), userCreateDto.email());
+        return ResponseEntity.status(HttpStatus.CREATED).body(userSave.getId());
     }
 
     @GetMapping(path = "/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable(name = "id") Long userId) {
         User user = userService.getUserById(userId);
         UserDto userDto = userMapper.toDto(user);
-        return new ResponseEntity<>(
-                userDto,
-                HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK).body(userDto);
     }
 
     @DeleteMapping(path = "/{id}")

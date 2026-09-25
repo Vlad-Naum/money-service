@@ -148,6 +148,8 @@ class UserControllerTest {
 
         mockMvc.perform(delete("/users/42"))
                 .andExpect(status().isNoContent());
+
+        verify(userService).deleteUserById(42L);
     }
 
     private static User user(Long id, String name, String email) {
