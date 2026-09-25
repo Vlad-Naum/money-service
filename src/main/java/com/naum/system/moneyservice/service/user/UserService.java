@@ -4,7 +4,7 @@ import com.naum.system.moneyservice.domain.user.User;
 import com.naum.system.moneyservice.repository.user.UserRepository;
 import com.naum.system.moneyservice.service.exception.InvalidEmailException;
 import com.naum.system.moneyservice.service.exception.UserNotFoundException;
-import com.naum.system.moneyservice.utils.EmailRules;
+import com.naum.system.moneyservice.validation.EmailRules;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,4 @@
-package com.naum.system.moneyservice.utils;
+package com.naum.system.moneyservice.validation;
 
 import java.util.regex.Pattern;
 

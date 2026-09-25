@@ -1,6 +1,5 @@
 package com.naum.system.moneyservice.validation;
 
-import com.naum.system.moneyservice.utils.EmailRules;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 

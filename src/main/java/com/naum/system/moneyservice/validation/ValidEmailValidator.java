@@ -1,6 +1,5 @@
 package com.naum.system.moneyservice.validation;
 
-import com.naum.system.moneyservice.utils.EmailRules;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
@@ -8,6 +7,6 @@ public class ValidEmailValidator implements ConstraintValidator<ValidEmail, Stri
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        return value == null || EmailRules.isValid(value);
+        return value == null || value.isBlank() || EmailRules.isValid(value);
     }
 }
