@@ -73,16 +73,8 @@ class UserServiceTest {
     }
 
     @Test
-    void deleteUserById_withNullId_returnsFalseAndDoesNotTouchRepository() {
-        assertThat(userService.deleteUserById(null)).isFalse();
-
-        verifyNoInteractions(userRepository);
-    }
-
-    @Test
-    void deleteUserById_deletesAndReturnsTrue() {
-        assertThat(userService.deleteUserById(5L)).isTrue();
-
+    void deleteUserById() {
+        userService.deleteUserById(5L);
         verify(userRepository).deleteById(5L);
     }
 

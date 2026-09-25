@@ -3,8 +3,8 @@ package com.naum.system.moneyservice.controller.money;
 import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
 import com.naum.system.moneyservice.domain.money.MoneyCostsDto;
 import com.naum.system.moneyservice.service.money.MoneyCostsService;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -18,15 +18,14 @@ import java.time.LocalDate;
 
 @RestController
 @RequestMapping(path = "/users/{user_id}/money_costs")
+@RequiredArgsConstructor
 public class MoneyCostsController {
 
-    @Autowired
-    private MoneyCostsService moneyCostsService;
+    private final MoneyCostsService moneyCostsService;
 
-    @Autowired
-    private ModelMapper modelMapper;
+    private final ModelMapper modelMapper;
 
-    @RequestMapping(path = "/", method = RequestMethod.GET)
+    @GetMapping
     public ResponseEntity<Page<MoneyCostsDto>> getAllByDateAndUserIdWithCategory(
             @PathVariable(name = "user_id") Long userId,
             @RequestParam("localDate") LocalDate date,

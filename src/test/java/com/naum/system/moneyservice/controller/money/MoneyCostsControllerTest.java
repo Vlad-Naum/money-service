@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class MoneyCostsControllerTest {
 
     private static final LocalDate DATE = LocalDate.of(2024, 5, 1);
-    private static final String URL = "/users/1/money_costs/";
+    private static final String URL = "/users/1/money_costs";
 
     @Autowired
     private MockMvc mockMvc;
@@ -122,16 +122,6 @@ class MoneyCostsControllerTest {
         mockMvc.perform(get(URL).param("localDate", "2024-05-01"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].localDateTime").value("2024-05-01 10:15:00"));
-    }
-
-    @Disabled("Задача 3: путь без слэша на конце не матчится")
-    @Test
-    void getWithoutTrailingSlash_returns200() throws Exception {
-        when(moneyCostsService.findAllByDateAndUserId(eq(DATE), eq(1L), any(Pageable.class)))
-                .thenReturn(page());
-
-        mockMvc.perform(get("/users/1/money_costs").param("localDate", "2024-05-01"))
-                .andExpect(status().isOk());
     }
 
     private Pageable capturePageable() {

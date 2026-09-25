@@ -51,11 +51,7 @@ public class UserService {
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    public @NonNull boolean deleteUserById(Long id) {
-        if (id == null) {
-            return false;
-        }
+    public void deleteUserById(@NonNull Long id) {
         userRepository.deleteById(id);
-        return true;
     }
 }

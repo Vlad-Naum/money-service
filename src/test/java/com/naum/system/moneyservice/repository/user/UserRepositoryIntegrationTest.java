@@ -7,6 +7,7 @@ import com.naum.system.moneyservice.repository.money.MoneyCostsRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.PersistenceException;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +22,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -57,6 +57,27 @@ class UserRepositoryIntegrationTest {
     @Test
     void findUserByEmail_whenMissing_returnsNull() {
         assertThat(userRepository.findUserByEmail(uniqueEmail())).isNull();
+    }
+
+    @Test
+    void deleteById_whenUserExists_removesIt() {
+        User saved = userRepository.save(user("Ivan", uniqueEmail()));
+        entityManager.flush();
+
+        userRepository.deleteById(saved.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(userRepository.findById(saved.getId())).isEmpty();
+    }
+
+    @Test
+    void deleteUser_whenUserMissing_doesNotThrow() {
+        assertThat(userRepository.findById(1L)).isEmpty();
+        assertThatCode(() -> {
+            userRepository.deleteById(1L);
+            entityManager.flush();
+        }).doesNotThrowAnyException();
     }
 
     @Test

@@ -48,7 +48,7 @@ class UserControllerTest {
                 user(1L, "Ivan", "ivan@test.com"),
                 user(2L, null, "petr@test.com"))));
 
-        mockMvc.perform(get("/users/"))
+        mockMvc.perform(get("/users"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].id").value(1))
@@ -77,7 +77,7 @@ class UserControllerTest {
     void create_returns201WithId() throws Exception {
         when(userService.create(any(UserCreateDto.class))).thenReturn(user(1L, null, "new@test.com"));
 
-        mockMvc.perform(post("/users/")
+        mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"email":"new@test.com"}
@@ -93,7 +93,7 @@ class UserControllerTest {
         when(userService.create(any(UserCreateDto.class)))
                 .thenThrow(new IllegalArgumentException("User email is not valid"));
 
-        mockMvc.perform(post("/users/")
+        mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"email":"not-an-email"}
@@ -102,20 +102,6 @@ class UserControllerTest {
                 .andExpect(content().string("User email is not valid"));
     }
 
-    @Test
-    void delete_withIdInBody_returnsTrue() throws Exception {
-        when(userService.deleteUserById(5L)).thenReturn(true);
-
-        mockMvc.perform(delete("/users/")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("5"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("true"));
-
-        verify(userService).deleteUserById(5L);
-    }
-
-    @Disabled("Задача 3: в Spring 6 trailing slash не матчится, GET /users из README отдаёт 404")
     @Test
     void getAll_withoutTrailingSlash_returns200() throws Exception {
         when(userService.findAllUser()).thenReturn(new ArrayList<>());
@@ -137,10 +123,9 @@ class UserControllerTest {
         verifyNoInteractions(userService);
     }
 
-    @Disabled("Задача 4: удаление должно быть DELETE /users/{id} с ответом 204")
     @Test
     void delete_byPathVariable_returns204() throws Exception {
-        when(userService.deleteUserById(42L)).thenReturn(true);
+        delete("/users/42");
 
         mockMvc.perform(delete("/users/42"))
                 .andExpect(status().isNoContent());

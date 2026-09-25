@@ -27,7 +27,7 @@ class EmailServiceTest {
     @BeforeEach
     void setUp() throws IOException {
         server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
-        server.createContext("/users/", exchange -> {
+        server.createContext("/users", exchange -> {
             byte[] bytes = responseBody.getBytes(StandardCharsets.UTF_8);
             exchange.getResponseHeaders().add("Content-Type", "application/json");
             if (bytes.length == 0) {
@@ -44,7 +44,7 @@ class EmailServiceTest {
 
         emailService = new EmailService();
         ReflectionTestUtils.setField(emailService, "emailResourceUrl",
-                "http://localhost:" + server.getAddress().getPort() + "/users/");
+                "http://localhost:" + server.getAddress().getPort() + "/users");
     }
 
     @AfterEach
