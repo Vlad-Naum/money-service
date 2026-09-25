@@ -1,19 +1,17 @@
 package com.naum.system.moneyservice.controller.user;
 
+import com.naum.system.moneyservice.controller.user.dto.UserMapper;
 import com.naum.system.moneyservice.domain.user.User;
 import com.naum.system.moneyservice.controller.user.dto.UserCreateDto;
 import com.naum.system.moneyservice.controller.user.dto.UserDto;
 import com.naum.system.moneyservice.service.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = "/users")
@@ -22,16 +20,12 @@ public class UserController {
 
     private final UserService userService;
 
-    private final  ModelMapper modelMapper;
+    private final UserMapper userMapper;
 
     @GetMapping
     public ResponseEntity<List<UserDto>> getAll() {
-        ArrayList<User> allUser =  userService.findAllUser();
-        List<UserDto> allUserDto = allUser.stream()
-                .map(user -> modelMapper.map(user, UserDto.class))
-                .collect(Collectors.toList());
         return new ResponseEntity<>(
-                allUserDto,
+                userMapper.toDto(userService.findAllUser()),
                 HttpStatus.OK);
     }
 
@@ -51,7 +45,7 @@ public class UserController {
     @GetMapping(path = "/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable(name = "id") Long userId) {
         User user = userService.getUserById(userId);
-        UserDto userDto = modelMapper.map(user, UserDto.class);
+        UserDto userDto = userMapper.toDto(user);
         return new ResponseEntity<>(
                 userDto,
                 HttpStatus.OK);

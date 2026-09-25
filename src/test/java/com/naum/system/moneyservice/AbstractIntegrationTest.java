@@ -32,7 +32,6 @@ import java.util.concurrent.TimeUnit;
  * (см. задачу 23 — после неё можно перейти на {@code @ServiceConnection}).
  */
 @SpringBootTest
-
 public abstract class AbstractIntegrationTest {
 
     public static final String TOPIC = "money_service";

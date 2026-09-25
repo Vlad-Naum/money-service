@@ -1,6 +1,6 @@
 package com.naum.system.moneyservice.controller.user;
 
-import com.naum.system.moneyservice.config.AppConfig;
+import com.naum.system.moneyservice.controller.user.dto.UserMapperImpl;
 import com.naum.system.moneyservice.domain.user.User;
 import com.naum.system.moneyservice.service.exception.UserNotFoundException;
 import com.naum.system.moneyservice.service.user.UserService;
@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Тесты с {@code @Disabled} описывают желаемое поведение — снимай аннотацию после соответствующей задачи.
  */
 @WebMvcTest(UserController.class)
-@Import(AppConfig.class)
+@Import(UserMapperImpl.class)
 class UserControllerTest {
 
     @Autowired

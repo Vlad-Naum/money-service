@@ -1,10 +1,10 @@
 package com.naum.system.moneyservice.controller.money;
 
+import com.naum.system.moneyservice.controller.money.dto.MoneyCostsMapper;
 import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
 import com.naum.system.moneyservice.controller.money.dto.MoneyCostsDto;
 import com.naum.system.moneyservice.service.money.MoneyCostsService;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -23,7 +23,7 @@ public class MoneyCostsController {
 
     private final MoneyCostsService moneyCostsService;
 
-    private final ModelMapper modelMapper;
+    private final MoneyCostsMapper moneyCostsMapper;
 
     @GetMapping
     public ResponseEntity<Page<MoneyCostsDto>> getAllByDateAndUserIdWithCategory(
@@ -34,10 +34,10 @@ public class MoneyCostsController {
         Page<MoneyCostsDto> moneyCostsPage;
         if (category == null) {
             moneyCostsPage = moneyCostsService.findAllByDateAndUserId(date, userId, pageable)
-                    .map(moneyCosts -> modelMapper.map(moneyCosts, MoneyCostsDto.class));
+                    .map(moneyCostsMapper::toDto);
         } else {
             moneyCostsPage = moneyCostsService.findAllByDateAndUserIdAndCategory(date, userId, pageable, category)
-                    .map(moneyCosts -> modelMapper.map(moneyCosts, MoneyCostsDto.class));
+                    .map(moneyCostsMapper::toDto);
         }
         return new ResponseEntity<>(moneyCostsPage, HttpStatus.OK);
     }

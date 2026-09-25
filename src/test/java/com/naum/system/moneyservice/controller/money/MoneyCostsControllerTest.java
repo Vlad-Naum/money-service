@@ -1,6 +1,6 @@
 package com.naum.system.moneyservice.controller.money;
 
-import com.naum.system.moneyservice.config.AppConfig;
+import com.naum.system.moneyservice.controller.money.dto.MoneyCostsMapperImpl;
 import com.naum.system.moneyservice.domain.money.MoneyCosts;
 import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
 import com.naum.system.moneyservice.service.money.MoneyCostsService;
@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(MoneyCostsController.class)
-@Import(AppConfig.class)
+@Import(MoneyCostsMapperImpl.class)
 class MoneyCostsControllerTest {
 
     private static final LocalDate DATE = LocalDate.of(2024, 5, 1);
