@@ -2,7 +2,7 @@ package com.naum.system.producer.service;
 
 import com.naum.system.producer.domain.MoneyCostsCategory;
 import com.naum.system.producer.domain.MoneyCostsKafka;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -12,13 +12,12 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @Service
+@RequiredArgsConstructor
 public class ScheduledService {
 
-    @Autowired
-    private KafkaProducerService producerService;
+    private final KafkaProducerService producerService;
 
-    @Autowired
-    private EmailService emailService;
+    private final EmailService emailService;
 
     @Scheduled(fixedDelay = 60, timeUnit = TimeUnit.SECONDS, initialDelay = 0)
     public void scheduleKafkaProduced() {

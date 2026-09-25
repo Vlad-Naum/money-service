@@ -7,20 +7,19 @@ import com.naum.system.moneyservice.domain.user.User;
 import com.naum.system.moneyservice.domain.user.UserCreateDto;
 import com.naum.system.moneyservice.service.money.MoneyCostsService;
 import com.naum.system.moneyservice.service.user.UserService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class KafkaListenerService {
 
-    @Autowired
-    private MoneyCostsService moneyCostsService;
+    private final MoneyCostsService moneyCostsService;
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
     @KafkaListener(topics = "money_service", groupId = "group1")
     void listener(MoneyCostsKafka moneyCostsKafka) {

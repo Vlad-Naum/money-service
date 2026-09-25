@@ -5,7 +5,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -42,9 +41,7 @@ class EmailServiceTest {
         });
         server.start();
 
-        emailService = new EmailService();
-        ReflectionTestUtils.setField(emailService, "emailResourceUrl",
-                "http://localhost:" + server.getAddress().getPort() + "/users");
+        emailService = new EmailService("http://localhost:" + server.getAddress().getPort() + "/users");
     }
 
     @AfterEach

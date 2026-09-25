@@ -4,7 +4,7 @@ import com.naum.system.moneyservice.domain.money.MoneyCosts;
 import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
 import com.naum.system.moneyservice.domain.user.User;
 import com.naum.system.moneyservice.repository.money.MoneyCostsRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -14,10 +14,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class MoneyCostsService {
 
-    @Autowired
-    MoneyCostsRepository moneyCostsRepository;
+    private final MoneyCostsRepository moneyCostsRepository;
 
     public MoneyCosts create(User user, LocalDateTime dateTime, Long expenses, MoneyCostsCategory costsCategory) {
         MoneyCosts moneyCosts = new MoneyCosts();

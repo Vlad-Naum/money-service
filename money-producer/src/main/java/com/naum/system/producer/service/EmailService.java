@@ -15,9 +15,11 @@ public class EmailService {
 
     private static final Pattern PATTERN = Pattern.compile("\"email\":\"(.*?)\"");
     private static final String DEFAULT_EMAIL = "test@test.com";
+    private final String emailResourceUrl;
 
-    @Value(value = "${email.resource.url}")
-    private String emailResourceUrl;
+    public EmailService(@Value(value = "${email.resource.url}") String emailResourceUrl) {
+        this.emailResourceUrl = emailResourceUrl;
+    }
 
     public List<String> getEmails() {
         RestTemplate restTemplate = new RestTemplate();

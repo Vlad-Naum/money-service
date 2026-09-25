@@ -3,7 +3,7 @@ package com.naum.system.moneyservice.service.user;
 import com.naum.system.moneyservice.domain.user.User;
 import com.naum.system.moneyservice.domain.user.UserCreateDto;
 import com.naum.system.moneyservice.repository.user.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -14,10 +14,10 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public User create(UserCreateDto userCreateDto) {
         if (!Pattern.compile("^(.+)@(.+)$")
