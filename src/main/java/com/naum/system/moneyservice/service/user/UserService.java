@@ -1,47 +1,47 @@
 package com.naum.system.moneyservice.service.user;
 
 import com.naum.system.moneyservice.domain.user.User;
-import com.naum.system.moneyservice.domain.user.UserCreateDto;
 import com.naum.system.moneyservice.repository.user.UserRepository;
+import com.naum.system.moneyservice.service.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor
+@Validated
 public class UserService {
 
     private final UserRepository userRepository;
 
-    public User create(UserCreateDto userCreateDto) {
+    public User create(String name, String email) {
         if (!Pattern.compile("^(.+)@(.+)$")
-                .matcher(userCreateDto.email())
+                .matcher(email)
                 .matches()) {
             throw new IllegalArgumentException("User email is not valid");
         }
         User user = new User();
-        user.setName(userCreateDto.name());
-        user.setEmail(userCreateDto.email());
+        user.setName(name);
+        user.setEmail(email);
         return userRepository.save(user);
     }
 
-    public @Nullable User findUserById(Long id) {
-        if (id == null) {
-            throw new IllegalArgumentException("User id is null");
+    public @NonNull User getUserById(@NonNull Long id) {
+        User user = userRepository.findUserById(id);
+        if (user == null) {
+            throw UserNotFoundException.userNotFoundByIdException(id);
         }
-        return userRepository.findUserById(id);
+        return user;
     }
 
-    public @Nullable User findUserByEmail(String email) {
-        if (email == null) {
-            throw new IllegalArgumentException("User email is null");
-        }
+    public Optional<User> findByEmail(String email) {
         return userRepository.findUserByEmail(email);
     }
 

@@ -1,6 +1,6 @@
 package com.naum.system.moneyservice.config;
 
-import com.naum.system.moneyservice.domain.money.MoneyCostsKafka;
+import com.naum.system.moneyservice.service.kafka.message.MoneyCostsKafka;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;

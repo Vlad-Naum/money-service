@@ -7,7 +7,6 @@ import com.naum.system.moneyservice.repository.money.MoneyCostsRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.PersistenceException;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +19,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
@@ -47,16 +47,17 @@ class UserRepositoryIntegrationTest {
         String email = uniqueEmail();
         User saved = userRepository.save(user("Ivan", email));
 
-        User found = userRepository.findUserByEmail(email);
-
+        Optional<User> found = userRepository.findUserByEmail(email);
         assertThat(found).isNotNull();
-        assertThat(found.getId()).isEqualTo(saved.getId());
-        assertThat(found.getName()).isEqualTo("Ivan");
+        assertThat(found.isPresent()).isTrue();
+        User user = found.get();
+        assertThat(user.getId()).isEqualTo(saved.getId());
+        assertThat(user.getName()).isEqualTo("Ivan");
     }
 
     @Test
     void findUserByEmail_whenMissing_returnsNull() {
-        assertThat(userRepository.findUserByEmail(uniqueEmail())).isNull();
+        assertThat(userRepository.findUserByEmail(uniqueEmail())).isNotNull().isNotPresent();
     }
 
     @Test

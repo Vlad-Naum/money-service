@@ -1,7 +1,7 @@
 package com.naum.system.moneyservice.controller.money;
 
 import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
-import com.naum.system.moneyservice.domain.money.MoneyCostsDto;
+import com.naum.system.moneyservice.controller.money.dto.MoneyCostsDto;
 import com.naum.system.moneyservice.service.money.MoneyCostsService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;

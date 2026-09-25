@@ -2,9 +2,9 @@ package com.naum.system.moneyservice.service.kafka;
 
 import com.naum.system.moneyservice.domain.money.MoneyCosts;
 import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
-import com.naum.system.moneyservice.domain.money.MoneyCostsKafka;
+import com.naum.system.moneyservice.service.kafka.message.MoneyCostsKafka;
 import com.naum.system.moneyservice.domain.user.User;
-import com.naum.system.moneyservice.domain.user.UserCreateDto;
+import com.naum.system.moneyservice.controller.user.dto.UserCreateDto;
 import com.naum.system.moneyservice.service.money.MoneyCostsService;
 import com.naum.system.moneyservice.service.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -52,29 +53,29 @@ class KafkaListenerServiceTest {
     @Test
     void listener_forExistingUser_createsMoneyCostsWithoutCreatingUser() {
         User user = user(1L, "ivan@test.com");
-        when(userService.findUserByEmail("ivan@test.com")).thenReturn(user);
+        when(userService.findByEmail("ivan@test.com")).thenReturn(Optional.of(user));
 
         listenerService.listener(message(2, 1500L, "ivan@test.com"));
 
-        verify(userService, never()).create(any());
+        verify(userService, never()).create(any(), any());
         verify(moneyCostsService).create(user, DATE_TIME, 1500L, MoneyCostsCategory.TAXI);
     }
 
     @Test
     void listener_forUnknownEmail_createsUserWithEmptyName() {
         User created = user(7L, "new@test.com");
-        when(userService.create(new UserCreateDto("", "new@test.com"))).thenReturn(created);
+        when(userService.create("", "new@test.com")).thenReturn(created);
 
         listenerService.listener(message(0, 300L, "new@test.com"));
 
-        verify(userService).create(new UserCreateDto("", "new@test.com"));
+        verify(userService).create("", "new@test.com");
         verify(moneyCostsService).create(created, DATE_TIME, 300L, MoneyCostsCategory.SUPERMARKETS);
     }
 
     @Test
     void listener_forUnknownCategoryId_usesDefaultCategory() {
         User user = user(1L, "ivan@test.com");
-        when(userService.findUserByEmail("ivan@test.com")).thenReturn(user);
+        when(userService.findByEmail("ivan@test.com")).thenReturn(Optional.of(user));
 
         listenerService.listener(message(100, 700L, "ivan@test.com"));
 

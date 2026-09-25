@@ -2,9 +2,8 @@ package com.naum.system.moneyservice.service.kafka;
 
 import com.naum.system.moneyservice.domain.money.MoneyCosts;
 import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
-import com.naum.system.moneyservice.domain.money.MoneyCostsKafka;
+import com.naum.system.moneyservice.service.kafka.message.MoneyCostsKafka;
 import com.naum.system.moneyservice.domain.user.User;
-import com.naum.system.moneyservice.domain.user.UserCreateDto;
 import com.naum.system.moneyservice.service.money.MoneyCostsService;
 import com.naum.system.moneyservice.service.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -28,11 +27,8 @@ public class KafkaListenerService {
         if (moneyCostsCategory == null) {
             moneyCostsCategory = MoneyCostsCategory.getDefault();
         }
-        User user = userService.findUserByEmail(email);
-        if (user == null) {
-            user = userService.create(new UserCreateDto("", email));
-            log.info("Create user by email: {}", email);
-        }
+        User user = userService.findByEmail(email)
+                .orElseGet(() -> userService.create("", email));
         MoneyCosts moneyCosts = moneyCostsService.create(user, moneyCostsKafka.getLocalDateTime(), moneyCostsKafka.getExpenses(), moneyCostsCategory);
         log.info("Create money costs [{}] for user: {}", moneyCosts.toString(), email);
     }

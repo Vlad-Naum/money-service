@@ -2,9 +2,8 @@ package com.naum.system.moneyservice.controller.user;
 
 import com.naum.system.moneyservice.config.AppConfig;
 import com.naum.system.moneyservice.domain.user.User;
-import com.naum.system.moneyservice.domain.user.UserCreateDto;
+import com.naum.system.moneyservice.service.exception.UserNotFoundException;
 import com.naum.system.moneyservice.service.user.UserService;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -16,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -59,7 +59,7 @@ class UserControllerTest {
 
     @Test
     void getById_whenUserExists_returnsUser() throws Exception {
-        when(userService.findUserById(1L)).thenReturn(user(1L, "Ivan", "ivan@test.com"));
+        when(userService.getUserById(1L)).thenReturn(user(1L, "Ivan", "ivan@test.com"));
 
         mockMvc.perform(get("/users/1"))
                 .andExpect(status().isOk())
@@ -68,14 +68,26 @@ class UserControllerTest {
     }
 
     @Test
-    void getById_whenUserMissing_returns404() throws Exception {
+    void getById_whenUserNotFound_returns404Problem() throws Exception {
+        when(userService.getUserById(42L)).thenThrow(UserNotFoundException.userNotFoundByIdException(42L));
+
         mockMvc.perform(get("/users/42"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value(containsString("42")));
+    }
+
+
+    @Test
+    void getById_withNonNumericId_returns400() throws Exception {
+        mockMvc.perform(get("/users/abc"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(userService);
     }
 
     @Test
     void create_returns201WithId() throws Exception {
-        when(userService.create(any(UserCreateDto.class))).thenReturn(user(1L, null, "new@test.com"));
+        when(userService.create(any(), any())).thenReturn(user(1L, null, "new@test.com"));
 
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -85,21 +97,17 @@ class UserControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(content().string("1"));
 
-        verify(userService).create(new UserCreateDto(null, "new@test.com"));
+        verify(userService).create(null, "new@test.com");
     }
 
     @Test
     void create_whenServiceRejectsEmail_returns400() throws Exception {
-        when(userService.create(any(UserCreateDto.class)))
-                .thenThrow(new IllegalArgumentException("User email is not valid"));
-
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"email":"not-an-email"}
                                 """))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("User email is not valid"));
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -110,7 +118,6 @@ class UserControllerTest {
                 .andExpect(status().isOk());
     }
 
-    @Disabled("Задача 6: невалидный запрос должен отсекаться Bean Validation до вызова сервиса")
     @Test
     void create_withoutEmail_returns400WithoutCallingService() throws Exception {
         mockMvc.perform(post("/users")
@@ -122,6 +129,18 @@ class UserControllerTest {
 
         verifyNoInteractions(userService);
     }
+
+    @Test
+    void create_withInvalidEmail_problemContainsFieldError() throws Exception {
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"Ivan","email":"not-an-email"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.email").exists());
+    }
+
 
     @Test
     void delete_byPathVariable_returns204() throws Exception {

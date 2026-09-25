@@ -4,7 +4,6 @@ import com.naum.system.moneyservice.AbstractIntegrationTest;
 import com.naum.system.moneyservice.domain.money.MoneyCosts;
 import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
 import com.naum.system.moneyservice.domain.user.User;
-import com.naum.system.moneyservice.domain.user.UserCreateDto;
 import com.naum.system.moneyservice.service.money.MoneyCostsService;
 import com.naum.system.moneyservice.service.user.UserService;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -20,10 +19,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -76,7 +72,7 @@ class KafkaListenerIntegrationTest extends AbstractIntegrationTest {
 
         send(json(2, 1500, "2024-05-01 10:15", email));
 
-        User user = await().atMost(TIMEOUT).until(() -> userService.findUserByEmail(email), Objects::nonNull);
+        User user = await().atMost(TIMEOUT).until(() -> userService.findByEmail(email), Optional::isPresent).get();
         List<MoneyCosts> costs = awaitMoneyCosts(user, 1);
 
         assertThat(user.getName()).isEmpty();
@@ -89,7 +85,7 @@ class KafkaListenerIntegrationTest extends AbstractIntegrationTest {
     @Test
     void message_forExistingUser_reusesUser() throws Exception {
         String email = uniqueEmail();
-        User existing = userService.create(new UserCreateDto("Ivan", email));
+        User existing = userService.create("Ivan", email);
 
         send(json(5, 700, "2024-05-01 12:00", email));
 
@@ -107,7 +103,7 @@ class KafkaListenerIntegrationTest extends AbstractIntegrationTest {
 
         send(json(100, 50, "2024-05-01 09:00", email));
 
-        User user = await().atMost(TIMEOUT).until(() -> userService.findUserByEmail(email), Objects::nonNull);
+        User user = await().atMost(TIMEOUT).until(() -> userService.findByEmail(email), Optional::isPresent).get();
         assertThat(awaitMoneyCosts(user, 1).get(0).getMoneyCostsCategory()).isEqualTo(MoneyCostsCategory.OTHER);
     }
 
@@ -123,7 +119,7 @@ class KafkaListenerIntegrationTest extends AbstractIntegrationTest {
         send(message);
         send(message);
 
-        User user = await().atMost(TIMEOUT).until(() -> userService.findUserByEmail(email), Objects::nonNull);
+        User user = await().atMost(TIMEOUT).until(() -> userService.findByEmail(email), Optional::isPresent).get();
         awaitMoneyCosts(user, 1);
         // Даём второму сообщению время обработаться и проверяем, что запись осталась одна.
         TimeUnit.SECONDS.sleep(3);

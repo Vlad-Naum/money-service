@@ -1,9 +1,10 @@
 package com.naum.system.moneyservice.controller.user;
 
 import com.naum.system.moneyservice.domain.user.User;
-import com.naum.system.moneyservice.domain.user.UserCreateDto;
-import com.naum.system.moneyservice.domain.user.UserDto;
+import com.naum.system.moneyservice.controller.user.dto.UserCreateDto;
+import com.naum.system.moneyservice.controller.user.dto.UserDto;
 import com.naum.system.moneyservice.service.user.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -35,9 +36,9 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createNewUser(@RequestBody UserCreateDto userCreateDto) {
+    public ResponseEntity<?> createNewUser(@Valid @RequestBody UserCreateDto userCreateDto) {
         try {
-            User userSave = userService.create(userCreateDto);
+            User userSave = userService.create(userCreateDto.name(), userCreateDto.email());
             return new ResponseEntity<>(
                     userSave.getId(),
                     HttpStatus.CREATED);
@@ -49,14 +50,11 @@ public class UserController {
 
     @GetMapping(path = "/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable(name = "id") Long userId) {
-        User user = userService.findUserById(userId);
-        if (user != null) {
-            UserDto userDto = modelMapper.map(user, UserDto.class);
-            return new ResponseEntity<>(
-                    userDto,
-                    HttpStatus.OK);
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        User user = userService.getUserById(userId);
+        UserDto userDto = modelMapper.map(user, UserDto.class);
+        return new ResponseEntity<>(
+                userDto,
+                HttpStatus.OK);
     }
 
     @DeleteMapping(path = "/{id}")

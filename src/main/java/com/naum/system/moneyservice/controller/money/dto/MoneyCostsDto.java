@@ -1,6 +1,7 @@
-package com.naum.system.moneyservice.domain.money;
+package com.naum.system.moneyservice.controller.money.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
 import lombok.Getter;
 import lombok.Setter;
 

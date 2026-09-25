@@ -1,8 +1,9 @@
 package com.naum.system.moneyservice.service.user;
 
 import com.naum.system.moneyservice.domain.user.User;
-import com.naum.system.moneyservice.domain.user.UserCreateDto;
+import com.naum.system.moneyservice.controller.user.dto.UserCreateDto;
 import com.naum.system.moneyservice.repository.user.UserRepository;
+import com.naum.system.moneyservice.service.exception.UserNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -17,7 +18,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,7 +33,7 @@ class UserServiceTest {
     void create_savesUserWithNameAndEmail() {
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        User created = userService.create(new UserCreateDto("Ivan", "ivan@test.com"));
+        User created = userService.create("Ivan", "ivan@test.com");
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());
@@ -44,7 +44,7 @@ class UserServiceTest {
 
     @Test
     void create_withInvalidEmail_throwsAndDoesNotSave() {
-        assertThatThrownBy(() -> userService.create(new UserCreateDto("Ivan", "not-an-email")))
+        assertThatThrownBy(() -> userService.create("Ivan", "not-an-email"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("User email is not valid");
 
@@ -52,15 +52,9 @@ class UserServiceTest {
     }
 
     @Test
-    void findUserById_withNullId_throws() {
-        assertThatThrownBy(() -> userService.findUserById(null))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void findUserByEmail_withNullEmail_throws() {
-        assertThatThrownBy(() -> userService.findUserByEmail(null))
-                .isInstanceOf(IllegalArgumentException.class);
+    void getUserById_withNotFoundId_throws() {
+        assertThatThrownBy(() -> userService.getUserById(1L))
+                .isInstanceOf(UserNotFoundException.class);
     }
 
     @Test

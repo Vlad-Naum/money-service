@@ -1,5 +1,6 @@
 package com.naum.system.moneyservice.domain.money;
 
+import com.naum.system.moneyservice.service.kafka.message.MoneyCostsKafka;
 import org.junit.jupiter.api.Test;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 

@@ -1,4 +1,4 @@
-package com.naum.system.moneyservice.domain.money;
+package com.naum.system.moneyservice.service.kafka.message;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;

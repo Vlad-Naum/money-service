@@ -1,4 +1,4 @@
-package com.naum.system.moneyservice.domain.user;
+package com.naum.system.moneyservice.controller.user.dto;
 
 import lombok.Getter;
 import lombok.Setter;
