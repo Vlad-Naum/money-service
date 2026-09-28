@@ -100,7 +100,6 @@ class UserRepositoryIntegrationTest {
         assertThat(moneyCostsRepository.findAllByUserId(saved.getId())).isEmpty();
     }
 
-    @Disabled("Задача 10: на email нет уникального ограничения, дубликаты сохраняются")
     @Test
     void save_withDuplicateEmail_fails() {
         String email = uniqueEmail();

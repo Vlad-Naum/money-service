@@ -27,8 +27,7 @@ public class KafkaListenerService {
         if (moneyCostsCategory == null) {
             moneyCostsCategory = MoneyCostsCategory.getDefault();
         }
-        User user = userService.findByEmail(email)
-                .orElseGet(() -> userService.create("", email));
+        User user = userService.getOrCreate(email);
         MoneyCosts moneyCosts = moneyCostsService.create(user, moneyCostsKafka.getLocalDateTime(), moneyCostsKafka.getExpenses(), moneyCostsCategory);
         log.info("Create money costs [{}] for user: {}", moneyCosts.toString(), email);
     }

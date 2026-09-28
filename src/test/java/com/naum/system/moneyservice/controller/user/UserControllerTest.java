@@ -2,6 +2,7 @@ package com.naum.system.moneyservice.controller.user;
 
 import com.naum.system.moneyservice.controller.user.dto.UserMapperImpl;
 import com.naum.system.moneyservice.domain.user.User;
+import com.naum.system.moneyservice.service.exception.UserAlreadyExistsException;
 import com.naum.system.moneyservice.service.exception.UserNotFoundException;
 import com.naum.system.moneyservice.service.user.UserService;
 import org.junit.jupiter.api.Test;
@@ -108,6 +109,18 @@ class UserControllerTest {
                                 {"email":"not-an-email"}
                                 """))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void create_returns409() throws Exception {
+        when(userService.create(any(), any())).thenThrow(UserAlreadyExistsException.class);
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"new@test.com"}
+                                """))
+                .andExpect(status().isConflict());
     }
 
     @Test

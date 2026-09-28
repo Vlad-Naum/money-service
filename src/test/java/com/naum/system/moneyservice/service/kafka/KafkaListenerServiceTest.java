@@ -53,7 +53,7 @@ class KafkaListenerServiceTest {
     @Test
     void listener_forExistingUser_createsMoneyCostsWithoutCreatingUser() {
         User user = user(1L, "ivan@test.com");
-        when(userService.findByEmail("ivan@test.com")).thenReturn(Optional.of(user));
+        when(userService.getOrCreate("ivan@test.com")).thenReturn(user);
 
         listenerService.listener(message(2, 1500L, "ivan@test.com"));
 
@@ -64,18 +64,18 @@ class KafkaListenerServiceTest {
     @Test
     void listener_forUnknownEmail_createsUserWithEmptyName() {
         User created = user(7L, "new@test.com");
-        when(userService.create("", "new@test.com")).thenReturn(created);
+        when(userService.getOrCreate("new@test.com")).thenReturn(created);
 
         listenerService.listener(message(0, 300L, "new@test.com"));
 
-        verify(userService).create("", "new@test.com");
+        verify(userService).getOrCreate("new@test.com");
         verify(moneyCostsService).create(created, DATE_TIME, 300L, MoneyCostsCategory.SUPERMARKETS);
     }
 
     @Test
     void listener_forUnknownCategoryId_usesDefaultCategory() {
         User user = user(1L, "ivan@test.com");
-        when(userService.findByEmail("ivan@test.com")).thenReturn(Optional.of(user));
+        when(userService.getOrCreate("ivan@test.com")).thenReturn(user);
 
         listenerService.listener(message(100, 700L, "ivan@test.com"));
 

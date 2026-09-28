@@ -3,6 +3,7 @@ package com.naum.system.moneyservice.service.user;
 import com.naum.system.moneyservice.domain.user.User;
 import com.naum.system.moneyservice.repository.user.UserRepository;
 import com.naum.system.moneyservice.service.exception.InvalidEmailException;
+import com.naum.system.moneyservice.service.exception.UserAlreadyExistsException;
 import com.naum.system.moneyservice.service.exception.UserNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,6 +11,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 
@@ -49,6 +51,15 @@ class UserServiceTest {
                 .hasMessage("Email is invalid");
 
         verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void create_withNotUniqueEmail_throwsAndDoesNotSave() {
+        when(userRepository.save(any(User.class))).thenThrow(DataIntegrityViolationException.class);
+        String duplicateEmail = "ivan@test.com";
+        assertThatThrownBy(() -> userService.create("Ivan", duplicateEmail))
+                .isInstanceOf(UserAlreadyExistsException.class)
+                .hasMessage("User already exist");
     }
 
     @Test
