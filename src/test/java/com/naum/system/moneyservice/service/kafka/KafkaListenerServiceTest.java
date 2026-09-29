@@ -1,13 +1,10 @@
 package com.naum.system.moneyservice.service.kafka;
 
 import com.naum.system.moneyservice.domain.money.MoneyCosts;
-import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
-import com.naum.system.moneyservice.service.kafka.message.MoneyCostsKafka;
 import com.naum.system.moneyservice.domain.user.User;
-import com.naum.system.moneyservice.controller.user.dto.UserCreateDto;
+import com.naum.system.moneyservice.service.exception.InvalidEmailException;
+import com.naum.system.moneyservice.service.kafka.message.MoneyCostsKafka;
 import com.naum.system.moneyservice.service.money.MoneyCostsService;
-import com.naum.system.moneyservice.service.user.UserService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,86 +12,61 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class KafkaListenerServiceTest {
 
-    private static final LocalDateTime DATE_TIME = LocalDateTime.of(2024, 5, 1, 10, 15);
-
     @Mock
     private MoneyCostsService moneyCostsService;
-
-    @Mock
-    private UserService userService;
 
     @InjectMocks
     private KafkaListenerService listenerService;
 
-    @BeforeEach
-    void stubMoneyCostsCreation() {
-        // Листенер логирует результат, а MoneyCosts.toString() обращается к user.getId(),
-        // поэтому мок должен вернуть сущность с заполненным пользователем.
-        when(moneyCostsService.create(any(), any(), any(), any())).thenAnswer(invocation -> {
-            MoneyCosts moneyCosts = new MoneyCosts();
-            moneyCosts.setUser(invocation.getArgument(0));
-            moneyCosts.setDateTime(invocation.getArgument(1));
-            moneyCosts.setExpenses(invocation.getArgument(2));
-            moneyCosts.setMoneyCostsCategory(invocation.getArgument(3));
-            return moneyCosts;
-        });
+    @Test
+    void listener_delegatesMessageToService() {
+        MoneyCostsKafka message = message("ivan@test.com");
+        when(moneyCostsService.registerExpense(message)).thenReturn(savedCost());
+
+        listenerService.listener(message);
+
+        verify(moneyCostsService).registerExpense(message);
+        verifyNoMoreInteractions(moneyCostsService);
     }
 
     @Test
-    void listener_forExistingUser_createsMoneyCostsWithoutCreatingUser() {
-        User user = user(1L, "ivan@test.com");
-        when(userService.getOrCreate("ivan@test.com")).thenReturn(user);
+    void listener_doesNotSwallowServiceExceptions() {
+        // Исключение должно дойти до контейнера Kafka: только тогда сработают повторы, error handler и DLT.
+        // Если листенер его поймает и залогирует, сообщение будет молча потеряно.
+        MoneyCostsKafka message = message("not-an-email");
+        when(moneyCostsService.registerExpense(message)).thenThrow(new InvalidEmailException());
 
-        listenerService.listener(message(2, 1500L, "ivan@test.com"));
-
-        verify(userService, never()).create(any(), any());
-        verify(moneyCostsService).create(user, DATE_TIME, 1500L, MoneyCostsCategory.TAXI);
+        assertThatThrownBy(() -> listenerService.listener(message))
+                .isInstanceOf(InvalidEmailException.class);
     }
 
-    @Test
-    void listener_forUnknownEmail_createsUserWithEmptyName() {
-        User created = user(7L, "new@test.com");
-        when(userService.getOrCreate("new@test.com")).thenReturn(created);
-
-        listenerService.listener(message(0, 300L, "new@test.com"));
-
-        verify(userService).getOrCreate("new@test.com");
-        verify(moneyCostsService).create(created, DATE_TIME, 300L, MoneyCostsCategory.SUPERMARKETS);
-    }
-
-    @Test
-    void listener_forUnknownCategoryId_usesDefaultCategory() {
-        User user = user(1L, "ivan@test.com");
-        when(userService.getOrCreate("ivan@test.com")).thenReturn(user);
-
-        listenerService.listener(message(100, 700L, "ivan@test.com"));
-
-        verify(moneyCostsService).create(user, DATE_TIME, 700L, MoneyCostsCategory.OTHER);
-    }
-
-    private static MoneyCostsKafka message(int categoryId, long expenses, String email) {
+    private static MoneyCostsKafka message(String email) {
         return MoneyCostsKafka.builder()
-                .moneyCostsCategoryId(categoryId)
-                .expenses(expenses)
-                .localDateTime(DATE_TIME)
+                .moneyCostsCategoryId(2)
+                .expenses(1500L)
+                .localDateTime(LocalDateTime.of(2024, 5, 1, 10, 15))
                 .userEmail(email)
                 .build();
     }
 
-    private static User user(Long id, String email) {
+    /**
+     * Листенер логирует результат, а MoneyCosts.toString() обращается к пользователю,
+     * поэтому возвращаем сущность с заполненным пользователем.
+     */
+    private static MoneyCosts savedCost() {
         User user = new User();
-        user.setId(id);
-        user.setEmail(email);
-        return user;
+        user.setId(1L);
+        MoneyCosts moneyCosts = new MoneyCosts();
+        moneyCosts.setUser(user);
+        return moneyCosts;
     }
 }

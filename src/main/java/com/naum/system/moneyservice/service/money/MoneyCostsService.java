@@ -4,6 +4,9 @@ import com.naum.system.moneyservice.domain.money.MoneyCosts;
 import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
 import com.naum.system.moneyservice.domain.user.User;
 import com.naum.system.moneyservice.repository.money.MoneyCostsRepository;
+import com.naum.system.moneyservice.service.kafka.message.MoneyCostsKafka;
+import com.naum.system.moneyservice.service.user.UserService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +22,8 @@ public class MoneyCostsService {
 
     private final MoneyCostsRepository moneyCostsRepository;
 
+    private final UserService userService;
+
     public MoneyCosts create(User user, LocalDateTime dateTime, Long expenses, MoneyCostsCategory costsCategory) {
         MoneyCosts moneyCosts = new MoneyCosts();
         moneyCosts.setUser(user);
@@ -26,6 +31,14 @@ public class MoneyCostsService {
         moneyCosts.setExpenses(expenses);
         moneyCosts.setMoneyCostsCategory(costsCategory);
         return moneyCostsRepository.save(moneyCosts);
+    }
+
+    @Transactional
+    public MoneyCosts registerExpense(MoneyCostsKafka message) {
+        User user = userService.getOrCreate(message.getUserEmail());
+        MoneyCostsCategory category = MoneyCostsCategory.getById(message.getMoneyCostsCategoryId());
+        category = (category == null) ? MoneyCostsCategory.getDefault() : category;
+        return create(user, message.getLocalDateTime(), message.getExpenses(), category);
     }
 
     public List<MoneyCosts> findAllByUserId(Long userId) {

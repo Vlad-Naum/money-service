@@ -6,6 +6,7 @@ import com.naum.system.moneyservice.service.exception.InvalidEmailException;
 import com.naum.system.moneyservice.service.exception.UserAlreadyExistsException;
 import com.naum.system.moneyservice.service.exception.UserNotFoundException;
 import com.naum.system.moneyservice.validation.EmailRules;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.lang.NonNull;
@@ -40,14 +41,15 @@ public class UserService {
         }
     }
 
+    @Transactional
     public User getOrCreate(String email) {
-        return userRepository.findUserByEmail(email).orElseGet(() -> {
-            try {
-                return create("", email);
-            } catch (UserAlreadyExistsException e) {
-                // Кто-то создал пользователя между проверкой и вставкой — берём его
-                return userRepository.findUserByEmail(email).orElseThrow();
-            }
+        if (!EmailRules.isValid(email)) {
+            throw new InvalidEmailException();
+        }
+        final String normalizeEmail = EmailRules.normalize(email);
+        return userRepository.findUserByEmail(normalizeEmail).orElseGet(() -> {
+            userRepository.insertIfAbsent(normalizeEmail);
+            return userRepository.findUserByEmail(normalizeEmail).orElseThrow();
         });
     }
 

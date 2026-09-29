@@ -19,7 +19,11 @@ import org.springframework.kafka.core.KafkaTemplate;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,8 +58,8 @@ class KafkaListenerIntegrationTest extends AbstractIntegrationTest {
         producerFactory = new DefaultKafkaProducerFactory<>(config);
         kafkaTemplate = new KafkaTemplate<>(producerFactory);
 
-        // У новой consumer group по умолчанию auto.offset.reset=latest: сообщение, отправленное
-        // до назначения партиций, будет пропущено. Поэтому ждём, пока листенер получит партиции (см. задачу 22).
+        // Пока у консьюмера auto.offset.reset=latest, сообщение, отправленное до назначения партиций,
+        // будет пропущено. После задачи 22 (earliest) это ожидание можно убрать.
         await().atMost(TIMEOUT).until(() -> listenerRegistry.getListenerContainers().stream()
                 .allMatch(container -> container.getAssignedPartitions() != null
                         && !container.getAssignedPartitions().isEmpty()));
@@ -67,68 +71,101 @@ class KafkaListenerIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void message_forUnknownEmail_createsUserAndMoneyCosts() throws Exception {
+    void newEmail_createsUserAndMoneyCosts() throws Exception {
         String email = uniqueEmail();
 
         send(json(2, 1500, "2024-05-01 10:15", email));
 
-        User user = await().atMost(TIMEOUT).until(() -> userService.findByEmail(email), Optional::isPresent).get();
-        List<MoneyCosts> costs = awaitMoneyCosts(user, 1);
-
+        User user = awaitUser(email);
+        MoneyCosts cost = awaitMoneyCosts(user, 1).get(0);
         assertThat(user.getName()).isEmpty();
-        MoneyCosts cost = costs.get(0);
         assertThat(cost.getMoneyCostsCategory()).isEqualTo(MoneyCostsCategory.TAXI);
         assertThat(cost.getExpenses()).isEqualTo(1500L);
         assertThat(cost.getDateTime()).isEqualTo(LocalDateTime.of(2024, 5, 1, 10, 15));
     }
 
     @Test
-    void message_forExistingUser_reusesUser() throws Exception {
+    void existingUser_isReusedAndKeepsName() throws Exception {
         String email = uniqueEmail();
         User existing = userService.create("Ivan", email);
 
         send(json(5, 700, "2024-05-01 12:00", email));
 
         awaitMoneyCosts(existing, 1);
-        List<User> usersWithEmail = userService.findAllUser().stream()
-                .filter(user -> email.equals(user.getEmail()))
-                .toList();
-        assertThat(usersWithEmail).hasSize(1);
-        assertThat(usersWithEmail.get(0).getName()).isEqualTo("Ivan");
+        assertThat(usersWithEmail(email)).singleElement()
+                .satisfies(user -> assertThat(user.getName()).isEqualTo("Ivan"));
     }
 
     @Test
-    void message_withUnknownCategoryId_isSavedWithDefaultCategory() throws Exception {
+    void emailInDifferentCase_isMatchedToExistingUser() throws Exception {
+        String email = uniqueEmail();
+        User existing = userService.create("Ivan", email);
+
+        send(json(2, 300, "2024-05-01 13:00", email.toUpperCase(Locale.ROOT)));
+
+        awaitMoneyCosts(existing, 1);
+        assertThat(usersWithEmail(email)).hasSize(1);
+    }
+
+    @Test
+    void unknownCategoryId_isSavedWithDefaultCategory() throws Exception {
         String email = uniqueEmail();
 
         send(json(100, 50, "2024-05-01 09:00", email));
 
-        User user = await().atMost(TIMEOUT).until(() -> userService.findByEmail(email), Optional::isPresent).get();
+        User user = awaitUser(email);
         assertThat(awaitMoneyCosts(user, 1).get(0).getMoneyCostsCategory()).isEqualTo(MoneyCostsCategory.OTHER);
+    }
+
+    @Test
+    void invalidEmail_isNotSaved_andNextMessageIsProcessed() throws Exception {
+        String invalidEmail = "not-an-email-" + UUID.randomUUID();
+        String validEmail = uniqueEmail();
+
+        send(json(2, 100, "2024-05-01 10:00", invalidEmail));
+        send(json(2, 200, "2024-05-01 11:00", validEmail));
+
+        // Сообщения одной партиции обрабатываются по порядку: раз обработано второе,
+        // первое уже отброшено (сейчас — после повторов DefaultErrorHandler, после задачи 17 — сразу в DLT).
+        User user = awaitUser(validEmail);
+        awaitMoneyCosts(user, 1);
+        assertThat(userService.findByEmail(invalidEmail)).isEmpty();
     }
 
     @Disabled("Задача 18: консьюмер не идемпотентен — повторная доставка события создаёт дубль")
     @Test
     void sameEventDeliveredTwice_isSavedOnce() throws Exception {
         String email = uniqueEmail();
-        String eventId = UUID.randomUUID().toString();
+        String markerEmail = uniqueEmail();
         String message = """
                 {"eventId":"%s","moneyCostsCategoryId":2,"expenses":100,"localDateTime":"2024-05-01 10:00","userEmail":"%s"}
-                """.formatted(eventId, email);
+                """.formatted(UUID.randomUUID(), email);
 
         send(message);
         send(message);
+        // Маркер вместо sleep: при одной партиции он обработается только после обоих дублей.
+        send(json(2, 1, "2024-05-01 10:00", markerEmail));
 
-        User user = await().atMost(TIMEOUT).until(() -> userService.findByEmail(email), Optional::isPresent).get();
-        awaitMoneyCosts(user, 1);
-        // Даём второму сообщению время обработаться и проверяем, что запись осталась одна.
-        TimeUnit.SECONDS.sleep(3);
+        awaitMoneyCosts(awaitUser(markerEmail), 1);
+        User user = awaitUser(email);
         assertThat(moneyCostsService.findAllByUserId(user.getId())).hasSize(1);
+    }
+
+    private User awaitUser(String email) {
+        return await().atMost(TIMEOUT)
+                .until(() -> userService.findByEmail(email), Optional::isPresent)
+                .orElseThrow();
     }
 
     private List<MoneyCosts> awaitMoneyCosts(User user, int expectedCount) {
         return await().atMost(TIMEOUT)
                 .until(() -> moneyCostsService.findAllByUserId(user.getId()), costs -> costs.size() == expectedCount);
+    }
+
+    private List<User> usersWithEmail(String email) {
+        return userService.findAllUser().stream()
+                .filter(user -> email.equalsIgnoreCase(user.getEmail()))
+                .toList();
     }
 
     private void send(String json) throws Exception {
