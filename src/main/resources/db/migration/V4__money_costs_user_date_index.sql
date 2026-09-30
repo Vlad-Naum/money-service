@@ -1,0 +1,1 @@
+CREATE INDEX idx_money_costs_user_date ON money_costs (user_id, date_time);
