@@ -1,11 +1,11 @@
 package com.naum.system.moneyservice.controller.money;
 
 import com.naum.system.moneyservice.controller.money.dto.MoneyCostsMapper;
+import com.naum.system.moneyservice.controller.money.dto.PageResponse;
 import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
 import com.naum.system.moneyservice.controller.money.dto.MoneyCostsDto;
 import com.naum.system.moneyservice.service.money.MoneyCostsService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.SortDefault;
@@ -26,19 +26,14 @@ public class MoneyCostsController {
     private final MoneyCostsMapper moneyCostsMapper;
 
     @GetMapping
-    public ResponseEntity<Page<MoneyCostsDto>> getAllByDateAndUserIdWithCategory(
+    public ResponseEntity<PageResponse<MoneyCostsDto>> getAllByDateAndUserIdWithCategory(
             @PathVariable(name = "user_id") Long userId,
             @RequestParam("localDate") LocalDate date,
             @SortDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable,
             @RequestParam("moneyCostsCategory") @Nullable MoneyCostsCategory category) {
-        Page<MoneyCostsDto> moneyCostsPage;
-        if (category == null) {
-            moneyCostsPage = moneyCostsService.findAllByDateAndUserId(date, userId, pageable)
-                    .map(moneyCostsMapper::toDto);
-        } else {
-            moneyCostsPage = moneyCostsService.findAllByDateAndUserIdAndCategory(date, userId, pageable, category)
-                    .map(moneyCostsMapper::toDto);
-        }
-        return new ResponseEntity<>(moneyCostsPage, HttpStatus.OK);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(PageResponse.from(moneyCostsService.find(userId, date, category, pageable)
+                        .map(moneyCostsMapper::toDto)));
     }
 }

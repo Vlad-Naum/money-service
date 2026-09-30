@@ -20,6 +20,7 @@ public class MoneyCosts {
     @Column(name = "id")
     Long id;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "category")
     private MoneyCostsCategory moneyCostsCategory;
 

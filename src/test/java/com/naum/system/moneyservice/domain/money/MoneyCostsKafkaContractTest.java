@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class MoneyCostsKafkaContractTest {
 
     static final String CONTRACT_JSON = """
-            {"moneyCostsCategoryId":2,"expenses":1500,"localDateTime":"2024-05-01 10:15","userEmail":"ivan@test.com"}
+            {"moneyCostsCategory":"TAXI","expenses":1500,"localDateTime":"2024-05-01 10:15","userEmail":"ivan@test.com"}
             """;
 
     @Test
@@ -25,7 +25,7 @@ class MoneyCostsKafkaContractTest {
             MoneyCostsKafka message = deserializer.deserialize("money_service",
                     CONTRACT_JSON.getBytes(StandardCharsets.UTF_8));
 
-            assertThat(message.getMoneyCostsCategoryId()).isEqualTo(2);
+            assertThat(message.getMoneyCostsCategory()).isEqualTo(MoneyCostsCategory.TAXI.name());
             assertThat(message.getExpenses()).isEqualTo(1500L);
             assertThat(message.getLocalDateTime()).isEqualTo(LocalDateTime.of(2024, 5, 1, 10, 15));
             assertThat(message.getUserEmail()).isEqualTo("ivan@test.com");

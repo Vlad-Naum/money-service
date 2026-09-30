@@ -42,7 +42,7 @@ class ScheduledServiceTest {
         ArgumentCaptor<MoneyCostsKafka> captor = ArgumentCaptor.forClass(MoneyCostsKafka.class);
         verify(producerService, times(RUNS)).sendMessage(captor.capture());
         assertThat(captor.getAllValues()).allSatisfy(message -> {
-            assertThat(MoneyCostsCategory.getById(message.getMoneyCostsCategoryId())).isNotNull();
+            assertThat(message.getMoneyCostsCategory()).isNotNull();
             assertThat(message.getExpenses()).isBetween(0L, 99_999L);
             assertThat(message.getUserEmail()).isIn(emails);
             assertThat(message.getLocalDateTime()).isNotNull();

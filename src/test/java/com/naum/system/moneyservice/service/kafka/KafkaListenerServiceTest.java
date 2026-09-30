@@ -1,6 +1,7 @@
 package com.naum.system.moneyservice.service.kafka;
 
 import com.naum.system.moneyservice.domain.money.MoneyCosts;
+import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
 import com.naum.system.moneyservice.domain.user.User;
 import com.naum.system.moneyservice.service.exception.InvalidEmailException;
 import com.naum.system.moneyservice.service.kafka.message.MoneyCostsKafka;
@@ -51,7 +52,7 @@ class KafkaListenerServiceTest {
 
     private static MoneyCostsKafka message(String email) {
         return MoneyCostsKafka.builder()
-                .moneyCostsCategoryId(2)
+                .moneyCostsCategory(MoneyCostsCategory.TAXI.name())
                 .expenses(1500L)
                 .localDateTime(LocalDateTime.of(2024, 5, 1, 10, 15))
                 .userEmail(email)

@@ -1,5 +1,6 @@
 package com.naum.system.producer.service;
 
+import com.naum.system.producer.domain.MoneyCostsCategory;
 import com.naum.system.producer.domain.MoneyCostsKafka;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -63,7 +64,7 @@ class KafkaProducerServiceTest {
 
     private static MoneyCostsKafka message() {
         return MoneyCostsKafka.builder()
-                .moneyCostsCategoryId(2)
+                .moneyCostsCategory(MoneyCostsCategory.TAXI.name())
                 .expenses(1500)
                 .localDateTime(LocalDateTime.of(2024, 5, 1, 10, 15))
                 .userEmail("ivan@test.com")

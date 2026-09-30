@@ -4,7 +4,6 @@ import com.naum.system.moneyservice.controller.money.dto.MoneyCostsMapperImpl;
 import com.naum.system.moneyservice.domain.money.MoneyCosts;
 import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
 import com.naum.system.moneyservice.service.money.MoneyCostsService;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +15,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mapping.PropertyReferenceException;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -25,7 +26,6 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -47,7 +47,7 @@ class MoneyCostsControllerTest {
 
     @Test
     void getWithoutCategory_returnsPageOfMoneyCosts() throws Exception {
-        when(moneyCostsService.findAllByDateAndUserId(eq(DATE), eq(1L), any(Pageable.class)))
+        when(moneyCostsService.find(eq(1L), eq(DATE), any() , any(Pageable.class)))
                 .thenReturn(page(moneyCosts(10L, MoneyCostsCategory.TAXI, 1500L)));
 
         mockMvc.perform(get(URL).param("localDate", "2024-05-01"))
@@ -57,12 +57,12 @@ class MoneyCostsControllerTest {
                 .andExpect(jsonPath("$.content[0].moneyCostsCategory").value("TAXI"))
                 .andExpect(jsonPath("$.content[0].expenses").value(1500));
 
-        verify(moneyCostsService, never()).findAllByDateAndUserIdAndCategory(any(), any(), any(), any());
+        verify(moneyCostsService).find(any(), any(), any(), any());
     }
 
     @Test
     void getWithoutPagingParams_usesDefaultPageAndSortById() throws Exception {
-        when(moneyCostsService.findAllByDateAndUserId(eq(DATE), eq(1L), any(Pageable.class)))
+        when(moneyCostsService.find(eq(1L), eq(DATE), any() , any(Pageable.class)))
                 .thenReturn(page());
 
         mockMvc.perform(get(URL).param("localDate", "2024-05-01"))
@@ -76,7 +76,7 @@ class MoneyCostsControllerTest {
 
     @Test
     void getWithPagingParams_passesThemToService() throws Exception {
-        when(moneyCostsService.findAllByDateAndUserId(eq(DATE), eq(1L), any(Pageable.class)))
+        when(moneyCostsService.find(eq(1L), eq(DATE), any() , any(Pageable.class)))
                 .thenReturn(page());
 
         mockMvc.perform(get(URL)
@@ -94,8 +94,7 @@ class MoneyCostsControllerTest {
 
     @Test
     void getWithCategory_filtersByCategory() throws Exception {
-        when(moneyCostsService.findAllByDateAndUserIdAndCategory(eq(DATE), eq(1L), any(Pageable.class),
-                eq(MoneyCostsCategory.TAXI)))
+        when(moneyCostsService.find(eq(1L), eq(DATE), eq(MoneyCostsCategory.TAXI), any(Pageable.class)))
                 .thenReturn(page(moneyCosts(10L, MoneyCostsCategory.TAXI, 1500L)));
 
         mockMvc.perform(get(URL)
@@ -103,8 +102,19 @@ class MoneyCostsControllerTest {
                         .param("moneyCostsCategory", "TAXI"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].moneyCostsCategory").value("TAXI"));
+    }
 
-        verify(moneyCostsService, never()).findAllByDateAndUserId(any(), any(), any());
+    @Test
+    void sortUnknown_badRequest() throws Exception {
+        String unknownSortProperty = "unknown";
+        when(moneyCostsService.find(eq(1L), eq(DATE), any(), any(Pageable.class)))
+                .thenThrow(new PropertyReferenceException(unknownSortProperty, TypeInformation.of(MoneyCosts.class), List.of()));
+
+        mockMvc.perform(get(URL)
+                        .param("localDate", "2024-05-01")
+                        .param("sort", unknownSortProperty + ",desc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.property").value(unknownSortProperty));
     }
 
     @Test
@@ -115,7 +125,7 @@ class MoneyCostsControllerTest {
 
     @Test
     void response_containsDateTime() throws Exception {
-        when(moneyCostsService.findAllByDateAndUserId(eq(DATE), eq(1L), any(Pageable.class)))
+        when(moneyCostsService.find(eq(1L), eq(DATE), any(), any(Pageable.class)))
                 .thenReturn(page(moneyCosts(10L, MoneyCostsCategory.TAXI, 1500L)));
 
         mockMvc.perform(get(URL).param("localDate", "2024-05-01"))
@@ -125,7 +135,7 @@ class MoneyCostsControllerTest {
 
     private Pageable capturePageable() {
         ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
-        verify(moneyCostsService).findAllByDateAndUserId(eq(DATE), eq(1L), captor.capture());
+        verify(moneyCostsService).find(eq(1L), eq(DATE), any() , captor.capture());
         return captor.getValue();
     }
 

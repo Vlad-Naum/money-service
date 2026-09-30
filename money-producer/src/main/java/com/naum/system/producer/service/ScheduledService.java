@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -22,11 +22,10 @@ public class ScheduledService {
     @Scheduled(fixedDelay = 60, timeUnit = TimeUnit.SECONDS, initialDelay = 0)
     public void scheduleKafkaProduced() {
         List<String> emails = emailService.getEmails();
-        Random random = new Random();
         MoneyCostsKafka moneyCostsKafka = new MoneyCostsKafka();
-        moneyCostsKafka.setMoneyCostsCategoryId(random.nextInt(0, MoneyCostsCategory.values().length));
-        moneyCostsKafka.setExpenses(random.nextLong(100000));
-        moneyCostsKafka.setUserEmail(emails.get(random.nextInt(0, emails.size())));
+        moneyCostsKafka.setMoneyCostsCategory(MoneyCostsCategory.getRandomMoneyCostsCategory().name());
+        moneyCostsKafka.setExpenses(ThreadLocalRandom.current().nextLong(100000L));
+        moneyCostsKafka.setUserEmail(emails.get(ThreadLocalRandom.current().nextInt(0, emails.size())));
         moneyCostsKafka.setLocalDateTime(LocalDateTime.now());
         producerService.sendMessage(moneyCostsKafka);
     }

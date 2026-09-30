@@ -16,13 +16,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 class MoneyCostsKafkaContractTest {
 
     private static final String CONTRACT_JSON = """
-            {"moneyCostsCategoryId":2,"expenses":1500,"localDateTime":"2024-05-01 10:15","userEmail":"ivan@test.com"}
+            {"moneyCostsCategory":"TAXI","expenses":1500,"localDateTime":"2024-05-01 10:15","userEmail":"ivan@test.com"}
             """;
 
     @Test
     void producerSerializesMessageAccordingToContract() throws Exception {
         MoneyCostsKafka message = MoneyCostsKafka.builder()
-                .moneyCostsCategoryId(2)
+                .moneyCostsCategory(MoneyCostsCategory.TAXI.name())
                 .expenses(1500)
                 // Секунды будут потеряны: формат даты в контракте — "yyyy-MM-dd HH:mm"
                 .localDateTime(LocalDateTime.of(2024, 5, 1, 10, 15, 42))

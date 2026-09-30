@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 public class MoneyCostsKafka implements Serializable {
 
-    private int moneyCostsCategoryId;
+    private String moneyCostsCategory;
 
     private long expenses;
 

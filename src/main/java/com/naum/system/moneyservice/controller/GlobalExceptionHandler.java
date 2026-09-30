@@ -3,6 +3,7 @@ package com.naum.system.moneyservice.controller;
 import com.naum.system.moneyservice.service.exception.InvalidEmailException;
 import com.naum.system.moneyservice.service.exception.UserAlreadyExistsException;
 import com.naum.system.moneyservice.service.exception.UserNotFoundException;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.*;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -45,6 +46,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ProblemDetail handleInvalidEmail(InvalidEmailException e) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Request validation failed");
         problem.setProperty("errors", Map.of("email", List.of(e.getMessage())));
+        return problem;
+    }
+
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ProblemDetail handlePropertyReference(PropertyReferenceException e) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Request validation failed");
+        problem.setProperty("errors", Map.of("property", List.of(e.getPropertyName())));
         return problem;
     }
 

@@ -1,36 +1,21 @@
 package com.naum.system.producer.domain;
 
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import java.util.concurrent.ThreadLocalRandom;
 
 public enum MoneyCostsCategory {
 
-    SUPERMARKETS(0),
-    AUTO(1),
-    TAXI(2),
-    MARKETPLACE(3),
-    CLOTHING(4),
-    RESTAURANTS(5),
-    BEAUTY(6),
-    ENTERTAINMENT(7),
-    OTHER(8);
+    SUPERMARKETS,
+    AUTO,
+    TAXI,
+    MARKETPLACE,
+    CLOTHING,
+    RESTAURANTS,
+    BEAUTY,
+    ENTERTAINMENT,
+    OTHER;
 
-    private final int id;
-
-    MoneyCostsCategory(int id) {
-        this.id = id;
-    }
-
-    public static @Nullable MoneyCostsCategory getById(int id) {
-        for (MoneyCostsCategory value : MoneyCostsCategory.values()) {
-            if (value.id == id) {
-                return value;
-            }
-        }
-        return null;
-    }
-
-    public static @NonNull MoneyCostsCategory getDefault() {
-        return OTHER;
+    public static MoneyCostsCategory getRandomMoneyCostsCategory() {
+        MoneyCostsCategory[] values = MoneyCostsCategory.values();
+        return values[ThreadLocalRandom.current().nextInt(values.length)];
     }
 }

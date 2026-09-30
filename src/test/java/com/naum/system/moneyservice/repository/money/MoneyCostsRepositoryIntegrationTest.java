@@ -7,7 +7,6 @@ import com.naum.system.moneyservice.repository.user.UserRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -16,6 +15,7 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -25,6 +25,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import static com.naum.system.moneyservice.repository.money.MoneyCostsSpecifications.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -74,7 +75,9 @@ class MoneyCostsRepositoryIntegrationTest {
 
     @Test
     void findByDateAndUserId_returnsOnlyCostsOfUserForThatDay() {
-        Page<MoneyCosts> page = moneyCostsRepository.findByDateAndUserId(DAY, user.getId(),
+        Specification<MoneyCosts> spec = Specification.where(ofUser(user.getId()))
+                .and(between(DAY.atStartOfDay(), DAY.plusDays(1).atStartOfDay()));
+        Page<MoneyCosts> page = moneyCostsRepository.findAll(spec,
                 PageRequest.of(0, 10, Sort.by("id")));
 
         assertThat(page.getContent())
@@ -84,9 +87,11 @@ class MoneyCostsRepositoryIntegrationTest {
 
     @Test
     void findByDateAndUserId_supportsPagination() {
-        Page<MoneyCosts> firstPage = moneyCostsRepository.findByDateAndUserId(DAY, user.getId(),
+        Specification<MoneyCosts> spec = Specification.where(ofUser(user.getId()))
+                .and(between(DAY.atStartOfDay(), DAY.plusDays(1).atStartOfDay()));
+        Page<MoneyCosts> firstPage = moneyCostsRepository.findAll(spec,
                 PageRequest.of(0, 2, Sort.by("id")));
-        Page<MoneyCosts> secondPage = moneyCostsRepository.findByDateAndUserId(DAY, user.getId(),
+        Page<MoneyCosts> secondPage = moneyCostsRepository.findAll(spec,
                 PageRequest.of(1, 2, Sort.by("id")));
 
         assertThat(firstPage.getTotalElements()).isEqualTo(3);
@@ -97,7 +102,9 @@ class MoneyCostsRepositoryIntegrationTest {
 
     @Test
     void findByDateAndUserId_supportsDescendingSortById() {
-        Page<MoneyCosts> page = moneyCostsRepository.findByDateAndUserId(DAY, user.getId(),
+        Specification<MoneyCosts> spec = Specification.where(ofUser(user.getId()))
+                .and(between(DAY.atStartOfDay(), DAY.plusDays(1).atStartOfDay()));
+        Page<MoneyCosts> page = moneyCostsRepository.findAll(spec,
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "id")));
 
         assertThat(page.getContent())
@@ -107,8 +114,11 @@ class MoneyCostsRepositoryIntegrationTest {
 
     @Test
     void findByDateAndUserIdAndCategory_filtersByCategory() {
-        Page<MoneyCosts> page = moneyCostsRepository.findByDateAndUserIdAndCategory(DAY, user.getId(),
-                MoneyCostsCategory.TAXI, PageRequest.of(0, 10, Sort.by("id")));
+        Specification<MoneyCosts> spec = Specification.where(ofUser(user.getId()))
+                .and(between(DAY.atStartOfDay(), DAY.plusDays(1).atStartOfDay()))
+                .and(hasCategory(MoneyCostsCategory.TAXI));
+        Page<MoneyCosts> page = moneyCostsRepository.findAll(spec,
+                PageRequest.of(0, 10, Sort.by("id")));
 
         assertThat(page.getContent())
                 .extracting(MoneyCosts::getExpenses)
@@ -122,11 +132,12 @@ class MoneyCostsRepositoryIntegrationTest {
                 .containsExactlyInAnyOrder(100L, 200L, 300L, 400L, 500L);
     }
 
-    @Disabled("Задача 13: в native query сортировка подставляет имя поля сущности (dateTime), а не колонки (date_time)")
     @Test
     void findByDateAndUserId_supportsSortByDateTime() {
-        Page<MoneyCosts> page = moneyCostsRepository.findByDateAndUserId(DAY, user.getId(),
-                PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "date_time")));
+        Specification<MoneyCosts> spec = Specification.where(ofUser(user.getId()))
+                .and(between(DAY.atStartOfDay(), DAY.plusDays(1).atStartOfDay()));
+        Page<MoneyCosts> page = moneyCostsRepository.findAll(spec,
+                PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "dateTime")));
 
         assertThat(page.getContent())
                 .extracting(MoneyCosts::getExpenses)

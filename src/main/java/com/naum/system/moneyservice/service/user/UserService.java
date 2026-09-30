@@ -54,11 +54,7 @@ public class UserService {
     }
 
     public @NonNull User getUserById(@NonNull Long id) {
-        User user = userRepository.findUserById(id);
-        if (user == null) {
-            throw UserNotFoundException.userNotFoundByIdException(id);
-        }
-        return user;
+        return userRepository.findById(id).orElseThrow(() -> UserNotFoundException.userNotFoundByIdException(id));
     }
 
     public Optional<User> findByEmail(String email) {
