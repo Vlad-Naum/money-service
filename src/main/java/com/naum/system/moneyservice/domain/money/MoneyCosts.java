@@ -16,9 +16,9 @@ import java.time.LocalDateTime;
 public class MoneyCosts {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id")
-    Long id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "money_costs_seq")
+    @SequenceGenerator(name = "money_costs_seq", sequenceName = "money_costs_seq")
+    private Long id;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "category")
@@ -30,10 +30,22 @@ public class MoneyCosts {
     @Column(name = "date_time")
     private LocalDateTime dateTime;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name="user_id", nullable=false, updatable=false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MoneyCosts other)) return false;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return MoneyCosts.class.hashCode();
+    }
 
     @Override
     public String toString() {
