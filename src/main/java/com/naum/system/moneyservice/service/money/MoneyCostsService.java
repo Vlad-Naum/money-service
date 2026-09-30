@@ -27,7 +27,6 @@ public class MoneyCostsService {
 
     private final UserService userService;
 
-    @Transactional
     public MoneyCosts create(User user, LocalDateTime dateTime, Long expenses, MoneyCostsCategory costsCategory) {
         MoneyCosts moneyCosts = new MoneyCosts();
         moneyCosts.setUser(user);

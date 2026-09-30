@@ -23,12 +23,12 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    @Transactional
+
     public User create(String name, String email) {
+        email = EmailRules.normalize(email);
         if (!EmailRules.isValid(email)) {
             throw new InvalidEmailException();
         }
-        email = EmailRules.normalize(email);
         if (userRepository.existsByEmail(email)) {
             throw new UserAlreadyExistsException();
         }
@@ -45,7 +45,7 @@ public class UserService {
     @Transactional
     public User getOrCreate(String email) {
         final String normalizeEmail = EmailRules.normalize(email);
-        if (!EmailRules.isValid(email)) {
+        if (!EmailRules.isValid(normalizeEmail)) {
             throw new InvalidEmailException();
         }
         return userRepository.findUserByEmail(normalizeEmail).orElseGet(() -> {
