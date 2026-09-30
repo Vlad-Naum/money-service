@@ -16,6 +16,9 @@ public enum MoneyCostsCategory {
     OTHER;
 
     public static MoneyCostsCategory getOrDefault(String category) {
+        if (category == null) {
+            return OTHER;
+        }
         return Arrays.stream(MoneyCostsCategory.values())
                 .filter(category1 -> category1.name().equals(category.toUpperCase(Locale.ROOT)))
                 .findFirst()

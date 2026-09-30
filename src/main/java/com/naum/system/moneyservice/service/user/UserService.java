@@ -6,11 +6,11 @@ import com.naum.system.moneyservice.service.exception.InvalidEmailException;
 import com.naum.system.moneyservice.service.exception.UserAlreadyExistsException;
 import com.naum.system.moneyservice.service.exception.UserNotFoundException;
 import com.naum.system.moneyservice.validation.EmailRules;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -23,6 +23,7 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    @Transactional
     public User create(String name, String email) {
         if (!EmailRules.isValid(email)) {
             throw new InvalidEmailException();
@@ -43,24 +44,27 @@ public class UserService {
 
     @Transactional
     public User getOrCreate(String email) {
+        final String normalizeEmail = EmailRules.normalize(email);
         if (!EmailRules.isValid(email)) {
             throw new InvalidEmailException();
         }
-        final String normalizeEmail = EmailRules.normalize(email);
         return userRepository.findUserByEmail(normalizeEmail).orElseGet(() -> {
             userRepository.insertIfAbsent(normalizeEmail);
             return userRepository.findUserByEmail(normalizeEmail).orElseThrow();
         });
     }
 
+    @Transactional(readOnly = true)
     public @NonNull User getUserById(@NonNull Long id) {
         return userRepository.findById(id).orElseThrow(() -> UserNotFoundException.userNotFoundByIdException(id));
     }
 
+    @Transactional(readOnly = true)
     public Optional<User> findByEmail(String email) {
         return userRepository.findUserByEmail(EmailRules.normalize(email));
     }
 
+    @Transactional(readOnly = true)
     public @NonNull ArrayList<User> findAllUser() {
         Iterable<User> all = userRepository.findAll();
         return StreamSupport.stream(all.spliterator(), false)
