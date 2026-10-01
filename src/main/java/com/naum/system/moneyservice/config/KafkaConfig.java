@@ -33,7 +33,7 @@ public class KafkaConfig {
     public DefaultErrorHandler kafkaErrorHandler(KafkaTemplate<String, String> template) {
         DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(template);
         DefaultErrorHandler handler = new DefaultErrorHandler(recoverer, new FixedBackOff(1_000L, 3));
-        handler.addNotRetryableExceptions(InvalidEmailException.class, DeserializationException.class);
+        handler.addNotRetryableExceptions(InvalidEmailException.class);
         return handler;
     }
 

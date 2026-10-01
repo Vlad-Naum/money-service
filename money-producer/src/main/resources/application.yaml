@@ -17,3 +17,6 @@ email:
     url: http://localhost:8080/users
 server:
   port: 8020
+app:
+  kafka:
+    topic: money_service

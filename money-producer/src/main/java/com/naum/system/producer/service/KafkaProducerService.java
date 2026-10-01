@@ -1,9 +1,9 @@
 package com.naum.system.producer.service;
 
 import com.naum.system.producer.domain.MoneyCostsKafka;
-import org.apache.kafka.clients.admin.NewTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
@@ -18,9 +18,9 @@ public class KafkaProducerService {
     private final String topicName;
     private final KafkaTemplate<String, MoneyCostsKafka> moneyCostsKafkaTemplate;
 
-    public KafkaProducerService(NewTopic moneyCostsTopic,
+    public KafkaProducerService(@Value("${app.kafka.topic}") String topicName,
                                 KafkaTemplate<String, MoneyCostsKafka> moneyCostsKafkaTemplate) {
-        this.topicName = moneyCostsTopic.name();
+        this.topicName = topicName;
         this.moneyCostsKafkaTemplate = moneyCostsKafkaTemplate;
     }
 
