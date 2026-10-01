@@ -6,22 +6,17 @@ import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
 import com.naum.system.moneyservice.domain.user.User;
 import com.naum.system.moneyservice.service.money.MoneyCostsService;
 import com.naum.system.moneyservice.service.user.UserService;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -46,28 +41,16 @@ class KafkaListenerIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private MoneyCostsService moneyCostsService;
 
-    private DefaultKafkaProducerFactory<String, String> producerFactory;
+    @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
 
     @BeforeEach
     void setUp() {
-        Map<String, Object> config = Map.of(
-                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers(),
-                ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class,
-                ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        producerFactory = new DefaultKafkaProducerFactory<>(config);
-        kafkaTemplate = new KafkaTemplate<>(producerFactory);
-
         // Пока у консьюмера auto.offset.reset=latest, сообщение, отправленное до назначения партиций,
         // будет пропущено. После задачи 22 (earliest) это ожидание можно убрать.
         await().atMost(TIMEOUT).until(() -> listenerRegistry.getListenerContainers().stream()
                 .allMatch(container -> container.getAssignedPartitions() != null
                         && !container.getAssignedPartitions().isEmpty()));
-    }
-
-    @AfterEach
-    void tearDown() {
-        producerFactory.destroy();
     }
 
     @Test

@@ -15,7 +15,7 @@ public class KafkaListenerService {
 
     private final MoneyCostsService moneyCostsService;
 
-    @KafkaListener(topics = "money_service", groupId = "group1")
+    @KafkaListener(topics = "money_service", groupId = "money-service")
     void listener(MoneyCostsKafka moneyCostsKafka) {
         MoneyCosts moneyCosts = moneyCostsService.registerExpense(moneyCostsKafka);
         log.info("Create money costs [{}] for user: {}", moneyCosts.toString(), moneyCostsKafka.getUserEmail());
