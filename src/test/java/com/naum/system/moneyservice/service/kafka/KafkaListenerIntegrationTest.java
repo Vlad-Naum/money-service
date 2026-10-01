@@ -6,11 +6,9 @@ import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
 import com.naum.system.moneyservice.domain.user.User;
 import com.naum.system.moneyservice.service.money.MoneyCostsService;
 import com.naum.system.moneyservice.service.user.UserService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.time.Duration;
@@ -33,9 +31,6 @@ class KafkaListenerIntegrationTest extends AbstractIntegrationTest {
     private static final Duration TIMEOUT = Duration.ofSeconds(30);
 
     @Autowired
-    private KafkaListenerEndpointRegistry listenerRegistry;
-
-    @Autowired
     private UserService userService;
 
     @Autowired
@@ -43,15 +38,6 @@ class KafkaListenerIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
-
-    @BeforeEach
-    void setUp() {
-        // Пока у консьюмера auto.offset.reset=latest, сообщение, отправленное до назначения партиций,
-        // будет пропущено. После задачи 22 (earliest) это ожидание можно убрать.
-        await().atMost(TIMEOUT).until(() -> listenerRegistry.getListenerContainers().stream()
-                .allMatch(container -> container.getAssignedPartitions() != null
-                        && !container.getAssignedPartitions().isEmpty()));
-    }
 
     @Test
     void newEmail_createsUserAndMoneyCosts() throws Exception {

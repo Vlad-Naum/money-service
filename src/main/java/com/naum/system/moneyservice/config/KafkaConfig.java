@@ -26,12 +26,11 @@ public class KafkaConfig {
 
     @Bean
     public NewTopic moneyCostsDlt() {
-        return TopicBuilder.name("money_service-dlt").partitions(3).replicas(1).build();
+        return TopicBuilder.name("money_service.DLT").partitions(3).replicas(1).build();
     }
 
-
     @Bean
-    public DefaultErrorHandler kafkaErrorHandler(KafkaTemplate<String, MoneyCostsKafka> template) {
+    public DefaultErrorHandler kafkaErrorHandler(KafkaTemplate<String, String> template) {
         DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(template);
         DefaultErrorHandler handler = new DefaultErrorHandler(recoverer, new FixedBackOff(1_000L, 3));
         handler.addNotRetryableExceptions(InvalidEmailException.class, DeserializationException.class);
