@@ -1,18 +1,18 @@
 package com.naum.system.producer.service;
 
+import com.naum.system.contract.MoneyCostsEvent;
+import com.naum.system.producer.config.MoneyProducerProperties;
 import com.naum.system.producer.domain.MoneyCostsCategory;
-import com.naum.system.producer.domain.MoneyCostsKafka;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -28,46 +28,49 @@ class KafkaProducerServiceTest {
     private static final String TOPIC = "money_service";
 
     @Mock
-    private KafkaTemplate<String, MoneyCostsKafka> moneyCostsKafkaTemplate;
+    private KafkaTemplate<String, MoneyCostsEvent> moneyCostsEventTemplate;
 
-    @InjectMocks
     private KafkaProducerService producerService;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(producerService, "topicName", TOPIC);
+        producerService = new KafkaProducerService(
+                new MoneyProducerProperties(null, new MoneyProducerProperties.Kafka(TOPIC)),
+                moneyCostsEventTemplate);
         // Незавершённый future: проверяем только то, что и куда отправлено
-        lenient().when(moneyCostsKafkaTemplate.send(anyString(), any(MoneyCostsKafka.class)))
+        lenient().when(moneyCostsEventTemplate.send(anyString(), any(MoneyCostsEvent.class)))
                 .thenReturn(new CompletableFuture<>());
-        lenient().when(moneyCostsKafkaTemplate.send(anyString(), anyString(), any(MoneyCostsKafka.class)))
+        lenient().when(moneyCostsEventTemplate.send(anyString(), anyString(), any(MoneyCostsEvent.class)))
                 .thenReturn(new CompletableFuture<>());
     }
 
     @Test
     void sendMessage_sendsMessageToConfiguredTopic() {
-        MoneyCostsKafka message = message();
+        MoneyCostsEvent event = event();
 
-        producerService.sendMessage(message);
+        producerService.sendMessage(event);
 
-        verify(moneyCostsKafkaTemplate).send(eq(TOPIC), same(message));
+        verify(moneyCostsEventTemplate).send(eq(TOPIC), same(event));
     }
 
     @Disabled("Задача 20: сообщения без ключа — порядок событий одного пользователя не гарантирован")
     @Test
     void sendMessage_usesUserEmailAsKey() {
-        MoneyCostsKafka message = message();
+        MoneyCostsEvent event = event();
 
-        producerService.sendMessage(message);
+        producerService.sendMessage(event);
 
-        verify(moneyCostsKafkaTemplate).send(eq(TOPIC), eq("ivan@test.com"), same(message));
+        verify(moneyCostsEventTemplate).send(eq(TOPIC), eq("ivan@test.com"), same(event));
     }
 
-    private static MoneyCostsKafka message() {
-        return MoneyCostsKafka.builder()
-                .moneyCostsCategory(MoneyCostsCategory.TAXI.name())
-                .expenses(1500)
-                .localDateTime(LocalDateTime.of(2024, 5, 1, 10, 15))
-                .userEmail("ivan@test.com")
-                .build();
+    private static MoneyCostsEvent event() {
+        return new MoneyCostsEvent(
+                MoneyCostsEvent.CURRENT_VERSION,
+                UUID.randomUUID(),
+                Instant.parse("2024-05-01T10:15:00Z"),
+                "ivan@test.com",
+                1500,
+                MoneyCostsCategory.TAXI.name()
+        );
     }
 }

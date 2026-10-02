@@ -1,7 +1,6 @@
 package com.naum.system.producer.service;
 
-import com.naum.system.producer.domain.MoneyCostsCategory;
-import com.naum.system.producer.domain.MoneyCostsKafka;
+import com.naum.system.contract.MoneyCostsEvent;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -39,13 +38,13 @@ class ScheduledServiceTest {
             scheduledService.scheduleKafkaProduced();
         }
 
-        ArgumentCaptor<MoneyCostsKafka> captor = ArgumentCaptor.forClass(MoneyCostsKafka.class);
+        ArgumentCaptor<MoneyCostsEvent> captor = ArgumentCaptor.forClass(MoneyCostsEvent.class);
         verify(producerService, times(RUNS)).sendMessage(captor.capture());
         assertThat(captor.getAllValues()).allSatisfy(message -> {
-            assertThat(message.getMoneyCostsCategory()).isNotNull();
-            assertThat(message.getExpenses()).isBetween(0L, 99_999L);
-            assertThat(message.getUserEmail()).isIn(emails);
-            assertThat(message.getLocalDateTime()).isNotNull();
+            assertThat(message.category()).isNotNull();
+            assertThat(message.expenses()).isBetween(0L, 99_999L);
+            assertThat(message.userEmail()).isIn(emails);
+            assertThat(message.occurredAt()).isNotNull();
         });
     }
 }

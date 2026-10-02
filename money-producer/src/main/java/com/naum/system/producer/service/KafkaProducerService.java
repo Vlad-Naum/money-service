@@ -1,7 +1,7 @@
 package com.naum.system.producer.service;
 
+import com.naum.system.contract.MoneyCostsEvent;
 import com.naum.system.producer.config.MoneyProducerProperties;
-import com.naum.system.producer.domain.MoneyCostsKafka;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -16,16 +16,16 @@ public class KafkaProducerService {
     private static final Logger log = LoggerFactory.getLogger(KafkaProducerService.class);
 
     private final String topicName;
-    private final KafkaTemplate<String, MoneyCostsKafka> moneyCostsKafkaTemplate;
+    private final KafkaTemplate<String, MoneyCostsEvent> moneyCostsKafkaTemplate;
 
     public KafkaProducerService(MoneyProducerProperties props,
-                                KafkaTemplate<String, MoneyCostsKafka> moneyCostsKafkaTemplate) {
+                                KafkaTemplate<String, MoneyCostsEvent> moneyCostsKafkaTemplate) {
         this.topicName = props.kafka().topic();
         this.moneyCostsKafkaTemplate = moneyCostsKafkaTemplate;
     }
 
-    public void sendMessage(MoneyCostsKafka moneyCostsKafka) {
-        CompletableFuture<SendResult<String, MoneyCostsKafka>> future = moneyCostsKafkaTemplate.send(topicName, moneyCostsKafka);
+    public void sendMessage(MoneyCostsEvent moneyCostsKafka) {
+        CompletableFuture<SendResult<String, MoneyCostsEvent>> future = moneyCostsKafkaTemplate.send(topicName, moneyCostsKafka);
         future.whenComplete((result, ex) -> {
             if (ex == null) {
                 log.info("Sent success with offset=[{}]", result.getRecordMetadata().offset());

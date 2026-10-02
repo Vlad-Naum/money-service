@@ -1,11 +1,13 @@
 package com.naum.system.producer.domain;
 
+import com.naum.system.contract.MoneyCostsEvent;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -13,25 +15,26 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Контракт сообщения со стороны продюсера. Ожидаемый JSON совпадает с тем, что проверяет
  * MoneyCostsKafkaContractTest в money-service (см. задачу 24).
  */
-class MoneyCostsKafkaContractTest {
+class MoneyCostsEventContractTest {
 
     private static final String CONTRACT_JSON = """
-            {"moneyCostsCategory":"TAXI","expenses":1500,"localDateTime":"2024-05-01 10:15","userEmail":"ivan@test.com"}
+            {"schemaVersion":2,"eventId":"6f1c2c1e-6c55-4c4b-9a1e-2f4f0b8f6a01","occurredAt":"2024-05-01T10:15:42Z","userEmail":"ivan@test.com","expenses":1500,"category":"TAXI"}
             """;
 
     @Test
     void producerSerializesMessageAccordingToContract() throws Exception {
-        MoneyCostsKafka message = MoneyCostsKafka.builder()
-                .moneyCostsCategory(MoneyCostsCategory.TAXI.name())
-                .expenses(1500)
-                // Секунды будут потеряны: формат даты в контракте — "yyyy-MM-dd HH:mm"
-                .localDateTime(LocalDateTime.of(2024, 5, 1, 10, 15, 42))
-                .userEmail("ivan@test.com")
-                .build();
+        var event = new MoneyCostsEvent(
+                MoneyCostsEvent.CURRENT_VERSION,
+                UUID.fromString("6f1c2c1e-6c55-4c4b-9a1e-2f4f0b8f6a01"),
+                Instant.parse("2024-05-01T10:15:42Z"),
+                "ivan@test.com",
+                1500L,
+                MoneyCostsCategory.TAXI.name()
+        );
 
         byte[] bytes;
-        try (JsonSerializer<MoneyCostsKafka> serializer = new JsonSerializer<>()) {
-            bytes = serializer.serialize("money_service", message);
+        try (JsonSerializer<MoneyCostsEvent> serializer = new JsonSerializer<>()) {
+            bytes = serializer.serialize("money_service", event);
         }
 
         ObjectMapper objectMapper = new ObjectMapper();

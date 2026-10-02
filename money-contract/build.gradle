@@ -1,0 +1,17 @@
+plugins {
+    id 'java-library'
+    id 'java-test-fixtures'
+}
+
+java {
+    sourceCompatibility = '21'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Аннотации нужны только для компиляции: в рантайме Jackson уже есть в обоих сервисах
+    compileOnly 'com.fasterxml.jackson.core:jackson-annotations:2.15.4'
+}

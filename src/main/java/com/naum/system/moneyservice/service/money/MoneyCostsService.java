@@ -4,7 +4,7 @@ import com.naum.system.moneyservice.domain.money.MoneyCosts;
 import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
 import com.naum.system.moneyservice.domain.user.User;
 import com.naum.system.moneyservice.repository.money.MoneyCostsRepository;
-import com.naum.system.moneyservice.service.kafka.message.MoneyCostsKafka;
+import com.naum.system.moneyservice.service.kafka.message.RegisterExpenseCommand;
 import com.naum.system.moneyservice.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -13,8 +13,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 import static com.naum.system.moneyservice.repository.money.MoneyCostsSpecifications.*;
@@ -27,20 +29,19 @@ public class MoneyCostsService {
 
     private final UserService userService;
 
-    public MoneyCosts create(User user, LocalDateTime dateTime, Long expenses, MoneyCostsCategory costsCategory) {
+    public MoneyCosts create(User user, Instant occurredAt, Long expenses, MoneyCostsCategory costsCategory) {
         MoneyCosts moneyCosts = new MoneyCosts();
         moneyCosts.setUser(user);
-        moneyCosts.setDateTime(dateTime);
+        moneyCosts.setDateTime(LocalDateTime.ofInstant(occurredAt, ZoneId.systemDefault()));
         moneyCosts.setExpenses(expenses);
         moneyCosts.setMoneyCostsCategory(costsCategory);
         return moneyCostsRepository.save(moneyCosts);
     }
 
     @Transactional
-    public MoneyCosts registerExpense(MoneyCostsKafka message) {
-        User user = userService.getOrCreate(message.getUserEmail());
-        MoneyCostsCategory category = MoneyCostsCategory.getOrDefault(message.getMoneyCostsCategory());
-        return create(user, message.getLocalDateTime(), message.getExpenses(), category);
+    public MoneyCosts registerExpense(RegisterExpenseCommand expenseCommand) {
+        User user = userService.getOrCreate(expenseCommand.userEmail());
+        return create(user, expenseCommand.occurredAt(), expenseCommand.expenses(), expenseCommand.category());
     }
 
     @Transactional(readOnly = true)
