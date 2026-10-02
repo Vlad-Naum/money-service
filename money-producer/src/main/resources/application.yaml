@@ -12,11 +12,8 @@ spring:
       properties:
         enable.idempotence: true
         spring.json.add.type.headers: false
-email:
-  resource:
-    url: http://localhost:8080/users
 server:
   port: 8020
-app:
-  kafka:
-    topic: money_service
+money-producer:
+  email.url: http://localhost:8080/users
+  kafka.topic: money_service

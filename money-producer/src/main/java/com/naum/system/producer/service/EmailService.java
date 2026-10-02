@@ -1,41 +1,35 @@
 package com.naum.system.producer.service;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
+import com.naum.system.producer.service.dto.UserResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class EmailService {
 
-    private static final Pattern PATTERN = Pattern.compile("\"email\":\"(.*?)\"");
     private static final String DEFAULT_EMAIL = "test@test.com";
-    private final String emailResourceUrl;
-
-    public EmailService(@Value(value = "${email.resource.url}") String emailResourceUrl) {
-        this.emailResourceUrl = emailResourceUrl;
-    }
+    private final RestClient moneyServiceClient;
 
     public List<String> getEmails() {
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<String> response
-                = restTemplate.getForEntity(emailResourceUrl, String.class);
-        String body = response.getBody();
-        if (body == null) {
+        try {
+            List<UserResponse> users = moneyServiceClient.get()
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<>() {});
+            return Stream.concat(Stream.of(DEFAULT_EMAIL),
+                            users == null ? Stream.empty() : users.stream().map(UserResponse::email))
+                    .toList();
+        } catch (RestClientException e) {
+            log.warn("money-service unavailable, using default email", e);
             return List.of(DEFAULT_EMAIL);
         }
-        List<String> emails = new ArrayList<>();
-        emails.add(DEFAULT_EMAIL);
-        Matcher matcher = PATTERN.matcher(response.getBody());
-        while (matcher.find()) {
-            String email = matcher.group(1);
-            emails.add(email);
-        }
-        return emails;
     }
 }
