@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 2,
+  "eventId": "6f1c2c1e-6c55-4c4b-9a1e-2f4f0b8f6a01",
+  "occurredAt": "2024-05-01T10:15:42Z",
+  "userEmail": "ivan@test.com",
+  "expenses": 1500,
+  "category": "TAXI"
+}

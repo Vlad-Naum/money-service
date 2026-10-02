@@ -13,10 +13,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.List;
 
 import static com.naum.system.moneyservice.repository.money.MoneyCostsSpecifications.*;
@@ -32,7 +29,7 @@ public class MoneyCostsService {
     public MoneyCosts create(User user, Instant occurredAt, Long expenses, MoneyCostsCategory costsCategory) {
         MoneyCosts moneyCosts = new MoneyCosts();
         moneyCosts.setUser(user);
-        moneyCosts.setDateTime(LocalDateTime.ofInstant(occurredAt, ZoneId.systemDefault()));
+        moneyCosts.setDateTime(LocalDateTime.ofInstant(occurredAt, ZoneOffset.UTC));
         moneyCosts.setExpenses(expenses);
         moneyCosts.setMoneyCostsCategory(costsCategory);
         return moneyCostsRepository.save(moneyCosts);

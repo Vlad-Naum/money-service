@@ -2,6 +2,7 @@ package com.naum.system.moneyservice.config;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.naum.system.moneyservice.service.exception.InvalidEmailException;
+import com.naum.system.moneyservice.service.exception.UnsupportedEventException;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,7 +31,7 @@ public class KafkaConfig {
     public DefaultErrorHandler kafkaErrorHandler(KafkaTemplate<String, String> template) {
         DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(template);
         DefaultErrorHandler handler = new DefaultErrorHandler(recoverer, new FixedBackOff(1_000L, 3));
-        handler.addNotRetryableExceptions(InvalidEmailException.class, JsonProcessingException.class);
+        handler.addNotRetryableExceptions(InvalidEmailException.class, JsonProcessingException.class, UnsupportedEventException.class);
         return handler;
     }
 }

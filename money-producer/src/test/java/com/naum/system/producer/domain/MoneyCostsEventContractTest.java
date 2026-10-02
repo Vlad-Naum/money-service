@@ -6,20 +6,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
+import com.naum.system.contract.ContractSamples;
 import java.time.Instant;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Контракт сообщения со стороны продюсера. Ожидаемый JSON совпадает с тем, что проверяет
- * MoneyCostsKafkaContractTest в money-service (см. задачу 24).
- */
 class MoneyCostsEventContractTest {
-
-    private static final String CONTRACT_JSON = """
-            {"schemaVersion":2,"eventId":"6f1c2c1e-6c55-4c4b-9a1e-2f4f0b8f6a01","occurredAt":"2024-05-01T10:15:42Z","userEmail":"ivan@test.com","expenses":1500,"category":"TAXI"}
-            """;
 
     @Test
     void producerSerializesMessageAccordingToContract() throws Exception {
@@ -39,7 +32,7 @@ class MoneyCostsEventContractTest {
 
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode actual = objectMapper.readTree(bytes);
-        JsonNode expected = objectMapper.readTree(CONTRACT_JSON);
+        JsonNode expected = objectMapper.readTree(ContractSamples.moneyCostsV2());
         assertThat(actual).isEqualTo(expected);
     }
 }

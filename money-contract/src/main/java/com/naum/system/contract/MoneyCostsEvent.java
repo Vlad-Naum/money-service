@@ -14,4 +14,16 @@ public record MoneyCostsEvent(
         String category) {
 
     public static final int CURRENT_VERSION = 2;
+
+    @Override
+    public String toString() {
+        return "MoneyCostsEvent{" +
+                "schemaVersion=" + schemaVersion +
+                ", eventId=" + eventId +
+                ", occurredAt=" + occurredAt +
+                ", userEmail='" + userEmail + '\'' +
+                ", expenses=" + expenses +
+                ", category='" + category + '\'' +
+                '}';
+    }
 }

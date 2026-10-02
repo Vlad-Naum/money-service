@@ -1,17 +1,14 @@
 package com.naum.system.moneyservice.service.kafka;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.naum.system.contract.MoneyCostsEvent;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.naum.system.moneyservice.domain.money.MoneyCosts;
 import com.naum.system.moneyservice.domain.money.MoneyCostsCategory;
 import com.naum.system.moneyservice.domain.user.User;
 import com.naum.system.moneyservice.service.exception.InvalidEmailException;
+import com.naum.system.moneyservice.service.exception.UnsupportedEventException;
 import com.naum.system.moneyservice.service.kafka.message.RegisterExpenseCommand;
 import com.naum.system.moneyservice.service.money.MoneyCostsService;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,19 +19,23 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+/**
+ * Листенер только связывает читателя сообщений и сервис. Формат сообщения проверяет
+ * MoneyCostsEventReaderContractTest, бизнес-логику — MoneyCostsServiceTest,
+ * всю цепочку — KafkaListenerIntegrationTest.
+ */
 @ExtendWith(MockitoExtension.class)
 class KafkaListenerServiceTest {
 
-    public static final String TOPIC = "money_service";
+    private static final String JSON = "{\"any\":\"payload\"}";
 
-    private final ObjectMapper objectMapper = JsonMapper.builder()
-            .findAndAddModules()
-            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            .build();
+    @Mock
+    private MoneyCostsEventReader eventReader;
 
     @Mock
     private MoneyCostsService moneyCostsService;
@@ -43,56 +44,63 @@ class KafkaListenerServiceTest {
 
     @BeforeEach
     void setUp() {
-        listenerService = new KafkaListenerService(moneyCostsService, objectMapper);
+        listenerService = new KafkaListenerService(moneyCostsService, eventReader);
     }
 
     @Test
-    void listener_delegatesMessageToService() {
-        MoneyCostsEvent message = message("ivan@test.com");
-        RegisterExpenseCommand expenseCommand = RegisterExpenseCommand.of(message);
-        when(moneyCostsService.registerExpense(expenseCommand)).thenReturn(savedCost());
+    void listener_passesCommandFromReaderToService() throws Exception {
+        RegisterExpenseCommand command = command();
+        when(eventReader.read(JSON)).thenReturn(command);
+        when(moneyCostsService.registerExpense(command)).thenReturn(savedCost());
 
-        String messageJson = Assertions.assertDoesNotThrow(() -> objectMapper.writeValueAsString(message));
-        Assertions.assertDoesNotThrow(() -> listenerService.listener(
-                new ConsumerRecord<>(
-                        TOPIC,
-                        1,
-                        1,
-                        message.eventId().toString(),
-                        messageJson)));
+        listenerService.listener(record(JSON));
 
-        verify(moneyCostsService).registerExpense(expenseCommand);
-        verifyNoMoreInteractions(moneyCostsService);
+        verify(moneyCostsService).registerExpense(command);
     }
 
     @Test
-    void listener_doesNotSwallowServiceExceptions() {
+    void listener_whenMessageIsMalformed_propagatesExceptionAndDoesNotCallService() throws Exception {
+        when(eventReader.read(JSON)).thenThrow(new JsonParseException(null, "Unexpected character"));
+
+        assertThatThrownBy(() -> listenerService.listener(record(JSON)))
+                .isInstanceOf(JsonParseException.class);
+
+        verify(moneyCostsService, never()).registerExpense(any());
+    }
+
+    @Test
+    void listener_whenEventIsUnsupported_propagatesExceptionAndDoesNotCallService() throws Exception {
+        when(eventReader.read(JSON)).thenThrow(new UnsupportedEventException("Unsupported schemaVersion: 3"));
+
+        assertThatThrownBy(() -> listenerService.listener(record(JSON)))
+                .isInstanceOf(UnsupportedEventException.class);
+
+        verify(moneyCostsService, never()).registerExpense(any());
+    }
+
+    @Test
+    void listener_doesNotSwallowServiceExceptions() throws Exception {
         // Исключение должно дойти до контейнера Kafka: только тогда сработают повторы, error handler и DLT.
         // Если листенер его поймает и залогирует, сообщение будет молча потеряно.
-        MoneyCostsEvent message = message("not-an-email");
-        RegisterExpenseCommand expenseCommand = RegisterExpenseCommand.of(message);
-        String messageJson = Assertions.assertDoesNotThrow(() -> objectMapper.writeValueAsString(message));
-        when(moneyCostsService.registerExpense(expenseCommand)).thenThrow(new InvalidEmailException());
+        RegisterExpenseCommand command = command();
+        when(eventReader.read(JSON)).thenReturn(command);
+        when(moneyCostsService.registerExpense(command)).thenThrow(new InvalidEmailException());
 
-        assertThatThrownBy(() -> listenerService.listener(
-                new ConsumerRecord<>(
-                        TOPIC,
-                        1,
-                        1,
-                        message.eventId().toString(),
-                        messageJson)))
+        assertThatThrownBy(() -> listenerService.listener(record(JSON)))
                 .isInstanceOf(InvalidEmailException.class);
     }
 
-    private static MoneyCostsEvent message(String email) {
-        return new MoneyCostsEvent(
-                MoneyCostsEvent.CURRENT_VERSION,
+    private static ConsumerRecord<String, String> record(String value) {
+        return new ConsumerRecord<>("money_service", 0, 0L, null, value);
+    }
+
+    private static RegisterExpenseCommand command() {
+        return new RegisterExpenseCommand(
                 UUID.randomUUID(),
-                Instant.parse("2024-05-01T10:15:00Z"),
-                email,
+                Instant.parse("2024-05-01T10:15:42Z"),
+                "ivan@test.com",
                 1500L,
-                MoneyCostsCategory.TAXI.name()
-        );
+                MoneyCostsCategory.TAXI);
     }
 
     /**
